@@ -15,6 +15,7 @@ public fun SignaturePad(
     state: SignaturePadState,
     contentDescription: String? = null,
     startedSigning: (() -> Unit)? = null,
+    enabled: Boolean = true,
 ) {
     val bitmap = state.displayBitmap.value
     Image(
@@ -23,21 +24,27 @@ public fun SignaturePad(
                 state.setSize(it)
             }
             .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        state.gestureStarted(event.x, event.y)
-                        if (startedSigning != null)
-                            startedSigning()
+                if (enabled) {
+                    when (event.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            state.gestureStarted(event.x, event.y)
+                            if (startedSigning != null)
+                                startedSigning()
+                            true
+                        }
+                        MotionEvent.ACTION_MOVE -> {
+                            state.gestureMoved(event.x, event.y)
+                            true
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            state.gestureStopped(event.x, event.y)
+                            true
+                        }
+                        else -> false
                     }
-                    MotionEvent.ACTION_MOVE -> {
-                        state.gestureMoved(event.x, event.y)
-                    }
-                    MotionEvent.ACTION_UP -> {
-                        state.gestureStopped(event.x, event.y)
-                    }
-                    else -> return@pointerInteropFilter false
+                } else {
+                    false
                 }
-                true
             },
         bitmap = bitmap?.asImageBitmap() ?: ImageBitmap(1, 1),
         contentDescription = contentDescription
