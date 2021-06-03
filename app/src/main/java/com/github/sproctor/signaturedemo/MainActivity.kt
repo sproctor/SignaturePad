@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,6 +35,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SignatureBox() {
     val signaturePadState = rememberSignaturePadState(penColor = Color.Black)
+    var enabled by remember { mutableStateOf(true) }
     Column {
         Card(
             modifier = Modifier
@@ -43,6 +46,7 @@ fun SignatureBox() {
                 modifier = Modifier
                     .background(color = MaterialTheme.colors.onSurface.copy(alpha = 0.12f)),
                 state = signaturePadState,
+                enabled = enabled
             )
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -58,11 +62,22 @@ fun SignatureBox() {
                 )
             }
         }
-        Button(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            onClick = { signaturePadState.clear() }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround
         ) {
-            Text("RESET")
+            Button(
+                onClick = { enabled = !enabled }
+            ) {
+                Text(
+                    text = if (enabled) "DISABLE" else "ENABLE"
+                )
+            }
+            Button(
+                onClick = { signaturePadState.clear() }
+            ) {
+                Text("RESET")
+            }
         }
     }
 }
