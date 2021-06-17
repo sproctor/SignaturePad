@@ -3,12 +3,14 @@ package com.github.sproctor.signaturepad
 import android.view.MotionEvent
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
 
+@ExperimentalComposeUiApi
 @Composable
 public fun SignaturePad(
     modifier: Modifier = Modifier,
