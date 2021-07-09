@@ -32,7 +32,7 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.5.0")
+    implementation("androidx.core:core-ktx:1.6.0")
     implementation("androidx.compose.material:material:${rootProject.extra["compose_version"]}")
 }
 
@@ -47,7 +47,7 @@ afterEvaluate {
                 // You can then customize attributes of the publication as shown below.
                 groupId = "com.github.sproctor"
                 artifactId = "signaturepad"
-                version = "0.3.0"
+                version = "0.4.0"
             }
         }
     }
