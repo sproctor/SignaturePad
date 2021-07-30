@@ -27,13 +27,14 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = rootProject.extra["compose_version"] as String
+        kotlinCompilerExtensionVersion =
+            de.fayard.refreshVersions.core.versionFor("version.androidx.compose.material")
     }
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.6.0")
-    implementation("androidx.compose.material:material:${rootProject.extra["compose_version"]}")
+    implementation("androidx.core:core-ktx:_")
+    implementation("androidx.compose.material:material:_")
 }
 
 afterEvaluate {

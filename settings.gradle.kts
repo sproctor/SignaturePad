@@ -1,10 +1,9 @@
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-rootProject.name = "Signature Pad Demo"
+rootProject.name = "Signature Pad"
+
 include(":app")
 include(":signaturepad")
+
+plugins {
+    // See https://jmfayard.github.io/refreshVersions
+    id("de.fayard.refreshVersions") version "0.10.1"
+}
