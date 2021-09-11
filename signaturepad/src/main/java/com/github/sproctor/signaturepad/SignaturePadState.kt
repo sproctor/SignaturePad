@@ -16,10 +16,10 @@ import kotlin.math.sqrt
 public class SignaturePadState(
     public val density: Density,
     public val penColor: Color = Color.Black,
-    public val minPenWidth: Dp = 2.dp,
-    public val maxPenWidth: Dp = 5.dp,
-    public val velocityFilterWeight: Float = 0.5f,
-    public val velocityScale: Float = 1f,
+    public val minPenWidth: Dp = 1.dp,
+    public val maxPenWidth: Dp = 4.dp,
+    public val velocityFilterWeight: Float = 0.6f,
+    public val velocityScale: Float = 1.5f,
 ) {
     internal val displayBitmap: MutableState<Bitmap?> =
         mutableStateOf(value = null, policy = neverEqualPolicy())
@@ -64,9 +64,8 @@ public class SignaturePadState(
     }
 
     internal fun gestureMoved(previousPoint: TimedPoint, point: TimedPoint) {
-        // If the previous point was the first one, add it twice so we have at least 3 points
+        // If the previous point was the first one, add it
         if (points.size == 0) {
-            points.add(previousPoint)
             points.add(previousPoint)
         }
         addPoint(point)
