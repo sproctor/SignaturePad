@@ -6,25 +6,20 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.github.sproctor.signaturedemo.ui.theme.SignaturePadDemoTheme
 import com.github.sproctor.signaturepad.SignaturePad
 import com.github.sproctor.signaturepad.rememberSignaturePadState
 
 class MainActivity : ComponentActivity() {
-    @ExperimentalComposeUiApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            SignaturePadDemoTheme {
+            MaterialTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
                     SignatureBox()
@@ -34,7 +29,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@ExperimentalComposeUiApi
 @Composable
 fun SignatureBox() {
     val signaturePadState = rememberSignaturePadState(penColor = Color.Black)
@@ -85,11 +79,10 @@ fun SignatureBox() {
     }
 }
 
-@ExperimentalComposeUiApi
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    SignaturePadDemoTheme {
+    MaterialTheme {
         SignatureBox()
     }
 }
