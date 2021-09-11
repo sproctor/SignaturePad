@@ -19,7 +19,7 @@ public class SignaturePadState(
     public val minPenWidth: Dp = 2.dp,
     public val maxPenWidth: Dp = 5.dp,
     public val velocityFilterWeight: Float = 0.5f,
-    public val velocityScale: Float = 0.2f,
+    public val velocityScale: Float = 1f,
 ) {
     internal val displayBitmap: MutableState<Bitmap?> =
         mutableStateOf(value = null, policy = neverEqualPolicy())
@@ -56,25 +56,24 @@ public class SignaturePadState(
         paint.strokeJoin = Paint.Join.ROUND
     }
 
-    internal fun gestureStarted(x: Float, y: Float) {
+    internal fun gestureStarted() {
         // Reset state
         points.clear()
         lastVelocity = null
         lastPenWidth = minPenWidthPx
-        val newPoint = TimedPoint(x, y)
-
-        // Since we only draw the middle section, duplicate the first point
-        // so that we draw the first section
-        points.add(newPoint)
-        points.add(newPoint)
     }
 
-    internal fun gestureMoved(x: Float, y: Float) {
-        addPoint(x, y)
+    internal fun gestureMoved(previousPoint: TimedPoint, point: TimedPoint) {
+        // If the previous point was the first one, add it twice so we have at least 3 points
+        if (points.size == 0) {
+            points.add(previousPoint)
+            points.add(previousPoint)
+        }
+        addPoint(point)
     }
 
-    private fun addPoint(x: Float, y: Float) {
-        points.add(TimedPoint(x, y))
+    private fun addPoint(point: TimedPoint) {
+        points.add(point)
 
         // Need 4 points to draw a cubic bezier curve.
         if (points.size > 3) {
@@ -193,7 +192,7 @@ public class SignaturePadState(
     private fun strokeWidth(velocity: Float): Float {
         return minPenWidthPx + min(
             maxPenWidthPx - minPenWidthPx,
-            (maxPenWidthPx - minPenWidthPx) / (1 + velocity * velocityScale / density.density)
+            (maxPenWidthPx - minPenWidthPx) / (1f + velocity * velocityScale / density.density)
         )
     }
 

@@ -1,20 +1,19 @@
 package com.github.sproctor.signaturepad
 
-import android.os.SystemClock
-import kotlin.math.min
+import kotlin.math.max
 
 internal class TimedPoint(
     x: Float,
     y: Float,
+    private val uptimeMillis: Long,
 ) : ControlPoint(x, y) {
-    private val timestamp = SystemClock.uptimeMillis()
 
     fun velocityFrom(start: TimedPoint): Float {
-        val diff = min(timestamp - start.timestamp, 1)
-        return distanceTo(start) / diff
+        val diff = max(uptimeMillis - start.uptimeMillis, 1)
+        return distanceTo(start) / diff.toFloat()
     }
 
     override fun toString(): String {
-        return "TimedPoint($x, $y, $timestamp)"
+        return "TimedPoint($x, $y, $uptimeMillis)"
     }
 }
