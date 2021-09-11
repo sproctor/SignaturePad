@@ -5,12 +5,11 @@ plugins {
 }
 
 android {
-    compileSdk = 30
-    buildToolsVersion = "30.0.3"
+    compileSdk = 31
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 30
+        targetSdk = 31
     }
 
     compileOptions {
