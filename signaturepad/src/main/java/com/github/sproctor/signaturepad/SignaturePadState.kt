@@ -73,10 +73,6 @@ public class SignaturePadState(
         addPoint(x, y)
     }
 
-    internal fun gestureStopped(x: Float, y: Float) {
-        addPoint(x, y)
-    }
-
     private fun addPoint(x: Float, y: Float) {
         points.add(TimedPoint(x, y))
 
