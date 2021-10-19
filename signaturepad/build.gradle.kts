@@ -47,7 +47,7 @@ afterEvaluate {
                 // You can then customize attributes of the publication as shown below.
                 groupId = "com.github.sproctor"
                 artifactId = "signaturepad"
-                version = "0.6.0"
+                version = "0.7.0"
             }
         }
     }
