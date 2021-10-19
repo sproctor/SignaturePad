@@ -8,7 +8,7 @@ android {
     compileSdk = 31
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 21
         targetSdk = 31
     }
 
@@ -27,13 +27,13 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion =
-            de.fayard.refreshVersions.core.versionFor("version.androidx.compose.material")
+            de.fayard.refreshVersions.core.versionFor(AndroidX.compose.material)
     }
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:_")
-    implementation("androidx.compose.material:material:_")
+    implementation(AndroidX.core.ktx)
+    implementation(AndroidX.compose.material)
 }
 
 afterEvaluate {

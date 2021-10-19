@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.github.sproctor.signaturedemo"
-        minSdk = 24
+        minSdk = 21
         targetSdk = 31
         versionCode = 1
         versionName = "1.0"
@@ -41,21 +41,14 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = versionFor("version.androidx.compose.material")
+        kotlinCompilerExtensionVersion = versionFor(AndroidX.compose.material)
     }
 }
 
 dependencies {
     implementation(project(":signaturepad"))
 
-    implementation("androidx.appcompat:appcompat:_")
-    implementation("com.google.android.material:material:_")
-    implementation("androidx.compose.ui:ui:_")
-    implementation("androidx.compose.material:material:_")
+    implementation(AndroidX.compose.material)
     implementation("androidx.compose.ui:ui-tooling:_")
     implementation("androidx.activity:activity-compose:_")
-    testImplementation("junit:junit:_")
-    androidTestImplementation("androidx.test.ext:junit:_")
-    androidTestImplementation("androidx.test.espresso:espresso-core:_")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:_")
 }
