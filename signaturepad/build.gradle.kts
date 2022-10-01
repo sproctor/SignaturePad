@@ -5,19 +5,19 @@ plugins {
 }
 
 android {
-    compileSdk = 31
+    compileSdk = 33
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 31
+        targetSdk = 33
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
         freeCompilerArgs += listOf(
             "-Xexplicit-api=strict"
         )
@@ -26,8 +26,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion =
-            de.fayard.refreshVersions.core.versionFor(AndroidX.compose.material)
+        kotlinCompilerExtensionVersion = "1.3.1"
     }
 }
 
