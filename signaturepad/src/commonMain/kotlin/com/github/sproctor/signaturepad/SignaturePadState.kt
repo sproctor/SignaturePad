@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -229,7 +230,7 @@ public class SignaturePadState(
         height: Int,
         penColor: Color = Color.Black,
         backgroundColor: Color = Color.White
-    ): Bitmap {
+    ): ImageBitmap {
         val maskBitmap = this.maskBitmap ?: throw Exception("Bitmap not created")
         val result = Bitmap32(maskBitmap.width, maskBitmap.height, backgroundColor.toRGBA())
         result.context2d {
@@ -238,7 +239,7 @@ public class SignaturePadState(
             }
             scale(width, height)
         }
-        return result
+        return result.asImageBitmap()
     }
 }
 
