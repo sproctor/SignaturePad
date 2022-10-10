@@ -1,10 +1,16 @@
 plugins {
     id("com.android.library")
-    id("kotlin-android")
+    kotlin("multiplatform")
     id("maven-publish")
+    id("org.jetbrains.compose")
 }
 
+group = "com.github.sproctor"
+version = "0.8.0"
+
 android {
+    namespace = "com.github.sproctor.signaturepad"
+
     compileSdk = 33
 
     defaultConfig {
@@ -16,37 +22,37 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-        freeCompilerArgs += listOf(
-            "-Xexplicit-api=strict"
-        )
-    }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.3.1"
-    }
 }
 
-dependencies {
-    implementation(AndroidX.core.ktx)
-    implementation(AndroidX.compose.material)
-}
+kotlin {
+    android {
+        publishLibraryVariants("release")
+        compilations.all {
+            kotlinOptions.jvmTarget = "11"
+        }
+    }
+    jvm {
+        compilations.all {
+            kotlinOptions.jvmTarget = "11"
+        }
+    }
+//    js(IR) {
+//        browser()
+//        binaries.executable()
+//    }
 
-afterEvaluate {
-    publishing {
-        publications {
-            // Creates a Maven publication called "release".
-            create<MavenPublication>("release") {
-                // Applies the component for the release build variant.
-                from (components["release"])
+    explicitApi()
 
-                // You can then customize attributes of the publication as shown below.
-                groupId = "com.github.sproctor"
-                artifactId = "signaturepad"
-                version = "0.8.0"
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                api(compose.material)
+                implementation("com.soywiz.korlibs.korim:korim:_")
+            }
+        }
+        val androidMain by getting {
+            dependencies {
+                implementation(AndroidX.core.ktx)
             }
         }
     }

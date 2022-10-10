@@ -1,15 +1,22 @@
 package com.github.sproctor.signaturepad
 
-import android.graphics.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.neverEqualPolicy
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.scale
+import com.soywiz.korim.bitmap.Bitmap
+import com.soywiz.korim.bitmap.Bitmap32
+import com.soywiz.korim.bitmap.context2d
+import com.soywiz.korim.color.RGBA
+import com.soywiz.korim.paint.ColorPaint
+import com.soywiz.korim.paint.DefaultPaint
 import kotlin.math.min
 import kotlin.math.sqrt
 
@@ -23,18 +30,13 @@ public class SignaturePadState(
 ) {
     internal val displayBitmap: MutableState<Bitmap?> =
         mutableStateOf(value = null, policy = neverEqualPolicy())
-    private val displayPaint = Paint()
-    private var displayCanvas: Canvas = Canvas()
 
     private var maskBitmap: Bitmap? = null
-    private val maskPaint = Paint()
-    private var maskCanvas: Canvas = Canvas()
 
     private val points = mutableListOf<TimedPoint>()
     private var lastVelocity: Float? = null
     private val minPenWidthPx = with(density) { minPenWidth.toPx() }
     private val maxPenWidthPx = with(density) { maxPenWidth.toPx() }
-    private var lastPenWidth = minPenWidthPx
 
     init {
         if (velocityFilterWeight < 0f || velocityFilterWeight > 1f) {
@@ -43,24 +45,23 @@ public class SignaturePadState(
         if (minPenWidth > maxPenWidth) {
             throw IllegalArgumentException("minPenWidth cannot be less than maxPenWidth")
         }
-        displayPaint.color = penColor.toArgb()
-        initPaint(displayPaint)
-        maskPaint.color = Color.Black.toArgb()
-        initPaint(maskPaint)
+//        displayPaint.color = penColor.toArgb()
+//        initPaint(displayPaint)
+//        maskPaint.color = Color.Black.toArgb()
+//        initPaint(maskPaint)
     }
 
-    private fun initPaint(paint: Paint) {
-        paint.isAntiAlias = true
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.ROUND
-        paint.strokeJoin = Paint.Join.ROUND
-    }
+//    private fun initPaint(paint: Paint) {
+//        paint.isAntiAlias = true
+//        paint.style = Paint.Style.STROKE
+//        paint.strokeCap = Paint.Cap.ROUND
+//        paint.strokeJoin = Paint.Join.ROUND
+//    }
 
     internal fun gestureStarted() {
         // Reset state
         points.clear()
         lastVelocity = null
-        lastPenWidth = minPenWidthPx
     }
 
     internal fun gestureMoved(previousPoint: TimedPoint, point: TimedPoint) {
@@ -96,12 +97,10 @@ public class SignaturePadState(
             // gradually changes to the stroke width just calculated. The new
             // width calculation is based on the velocity between the Bezier's
             // start and end points.
-            addBezier(startPoint, endPoint, control1, control2, lastPenWidth, newWidth)
+            addBezier(startPoint, endPoint, control1, control2, newWidth)
 
             // Remove the first point
             points.removeAt(0)
-
-            lastPenWidth = newWidth
         }
     }
 
@@ -110,12 +109,15 @@ public class SignaturePadState(
         endPoint: ControlPoint,
         control1: ControlPoint,
         control2: ControlPoint,
-        startWidth: Float,
-        endWidth: Float
+        lineWidth: Float,
     ) {
-        val widthDelta = endWidth - startWidth
         val drawSteps = endPoint.distanceTo(startPoint).toInt() + 1
 
+        val displayContext2d = displayBitmap.value!!.getContext2d()
+        val maskContext2d = maskBitmap!!.getContext2d()
+
+        displayContext2d.moveTo(startPoint.x.toDouble(), startPoint.y.toDouble())
+        maskContext2d.moveTo(startPoint.x.toDouble(), startPoint.y.toDouble())
         for (i in 0..drawSteps) {
             val t = i.toFloat() / drawSteps
             val tt = t * t
@@ -133,13 +135,22 @@ public class SignaturePadState(
                     3 * u * tt * control2.y +
                     ttt * endPoint.y
 
-            val strokeWidth = startWidth + ttt * widthDelta
-            displayPaint.strokeWidth = strokeWidth
-            maskPaint.strokeWidth = strokeWidth
-            displayCanvas.drawPoint(x, y, displayPaint)
-            displayBitmap.value = displayBitmap.value
-            maskCanvas.drawPoint(x, y, maskPaint)
+            displayContext2d.lineTo(x.toDouble(), y.toDouble())
+            maskContext2d.lineTo(x.toDouble(), y.toDouble())
         }
+        displayContext2d.stroke(
+            paint = ColorPaint(penColor.toRGBA()),
+            lineWidth = lineWidth.toDouble(),
+            begin = false,
+        )
+        maskContext2d.stroke(
+            paint = DefaultPaint,
+            lineWidth = lineWidth.toDouble(),
+            begin = false
+        )
+        displayContext2d.dispose()
+        maskContext2d.dispose()
+        displayBitmap.value = displayBitmap.value
     }
 
     private fun calculateControlPoint(
@@ -209,12 +220,8 @@ public class SignaturePadState(
     }
 
     private fun createBitmap(width: Int, height: Int) {
-        displayBitmap.value = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply {
-            displayCanvas = Canvas(this)
-        }
-        maskBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply {
-            maskCanvas = Canvas(this)
-        }
+        displayBitmap.value = Bitmap32(width, height, false)
+        maskBitmap = Bitmap32(width, height, false)
     }
 
     public fun getSignatureBitmap(
@@ -224,19 +231,14 @@ public class SignaturePadState(
         backgroundColor: Color = Color.White
     ): Bitmap {
         val maskBitmap = this.maskBitmap ?: throw Exception("Bitmap not created")
-        val result =
-            Bitmap.createBitmap(maskBitmap.width, maskBitmap.height, Bitmap.Config.ARGB_8888)
-        val signature =
-            Bitmap.createBitmap(maskBitmap.width, maskBitmap.height, Bitmap.Config.ARGB_8888)
-        val signatureCanvas = Canvas(signature)
-        signatureCanvas.drawColor(penColor.toArgb())
-        val xferPaint = Paint()
-        xferPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
-        signatureCanvas.drawBitmap(maskBitmap, 0f, 0f, xferPaint)
-        val canvas = Canvas(result)
-        canvas.drawColor(backgroundColor.toArgb())
-        canvas.drawBitmap(signature, 0f, 0f, null)
-        return result.scale(width, height)
+        val result = Bitmap32(maskBitmap.width, maskBitmap.height, backgroundColor.toRGBA())
+        result.context2d {
+            stroke(paint = ColorPaint(penColor.toRGBA())) {
+                createPattern(maskBitmap)
+            }
+            scale(width, height)
+        }
+        return result
     }
 }
 
@@ -244,4 +246,13 @@ public class SignaturePadState(
 public fun rememberSignaturePadState(penColor: Color): SignaturePadState {
     val density = LocalDensity.current
     return remember { SignaturePadState(density = density, penColor = penColor) }
+}
+
+private fun Color.toRGBA(): RGBA {
+    return RGBA(
+        r = (red * 255).toInt(),
+        g = (green * 255).toInt(),
+        b = (blue * 255).toInt(),
+        a = (alpha * 255).toInt(),
+    )
 }

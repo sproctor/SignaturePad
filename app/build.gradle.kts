@@ -1,8 +1,7 @@
-import de.fayard.refreshVersions.core.versionFor
-
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    kotlin("multiplatform")
+    id("org.jetbrains.compose")
 }
 
 android {
@@ -16,9 +15,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
     }
 
     buildTypes {
@@ -30,25 +26,43 @@ android {
             )
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+kotlin {
+    android()
+    jvm {
+        compilations.all {
+            kotlinOptions.jvmTarget = "11"
+        }
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.3.1"
+//    js(IR) {
+//        browser()
+//        binaries.executable()
+//    }
+
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(project(":signaturepad"))
+                implementation(compose.material)
+            }
+        }
+        val androidMain by getting {
+            dependencies {
+                implementation("androidx.compose.ui:ui-tooling:_")
+                implementation("androidx.activity:activity-compose:_")
+            }
+        }
+        val jvmMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+            }
+        }
     }
 }
 
-dependencies {
-    implementation(project(":signaturepad"))
-
-    implementation(AndroidX.compose.material)
-    implementation("androidx.compose.ui:ui-tooling:_")
-    implementation("androidx.activity:activity-compose:_")
+compose.desktop {
+    application {
+        mainClass = "com.github.sproctor.signaturedemo.MainKt"
+    }
 }

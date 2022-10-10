@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="signaturepad-jvm-0.8.0">
+    <output-path>$PROJECT_DIR$/signaturepad/build/libs</output-path>
+    <root id="archive" name="signaturepad-jvm-0.8.0.jar">
+      <element id="module-output" name="Signature_Pad.signaturepad.jvmMain" />
+    </root>
+  </artifact>
+</component>
