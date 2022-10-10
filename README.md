@@ -5,19 +5,19 @@
 ### Multiplatform
 
 ```kotlin
-implementation("com.github.sproctor:SignaturePad:$signaturepad_version")
+implementation("com.github.sproctor.SignaturePad:signaturepad:$signaturepad_version")
 ```
 
 ### Android
 
 ```kotlin
-implementation("com.github.sproctor:SignaturePad-android:$signaturepad_version")
+implementation("com.github.sproctor.SignaturePad:signaturepad-android:$signaturepad_version")
 ```
 
 ### JVM
 
 ```kotlin
-implementation("com.github.sproctor:SignaturePad-jvm:$signaturepad_version")
+implementation("com.github.sproctor.SignaturePad:signaturepad-jvm:$signaturepad_version")
 ```
 
 ## Usage

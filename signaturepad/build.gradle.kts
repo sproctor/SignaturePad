@@ -50,10 +50,5 @@ kotlin {
                 implementation("com.soywiz.korlibs.korim:korim:_")
             }
         }
-        val androidMain by getting {
-            dependencies {
-                implementation(AndroidX.core.ktx)
-            }
-        }
     }
 }
