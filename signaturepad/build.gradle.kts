@@ -46,8 +46,9 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(compose.material)
-                implementation("com.soywiz.korlibs.korim:korim:_")
+                api(compose.runtime)
+                implementation(compose.foundation)
+                api("com.soywiz.korlibs.korim:korim:_")
             }
         }
     }

@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -14,7 +13,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.soywiz.korim.bitmap.Bitmap
 import com.soywiz.korim.bitmap.Bitmap32
-import com.soywiz.korim.bitmap.context2d
 import com.soywiz.korim.bitmap.resized
 import com.soywiz.korim.color.RGBA
 import com.soywiz.korim.paint.ColorPaint
@@ -222,10 +220,9 @@ public class SignaturePadState(
         height: Int,
         penColor: Color = Color.Black,
         backgroundColor: Color = Color.White
-    ): ImageBitmap {
+    ): Bitmap {
         val maskBitmap = this.maskBitmap ?: throw Exception("Bitmap not created")
-        val result = maskBitmap.resized(width, height, ScaleMode.COVER, Anchor.CENTER)
-        return result.asImageBitmap()
+        return maskBitmap.resized(width, height, ScaleMode.COVER, Anchor.CENTER)
     }
 }
 
