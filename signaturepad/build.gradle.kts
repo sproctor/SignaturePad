@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.github.sproctor"
-version = "0.9.3"
+version = "0.9.4"
 
 android {
     namespace = "com.github.sproctor.signaturepad"
