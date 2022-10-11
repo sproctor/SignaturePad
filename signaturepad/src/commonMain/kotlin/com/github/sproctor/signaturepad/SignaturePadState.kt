@@ -15,9 +15,12 @@ import androidx.compose.ui.unit.dp
 import com.soywiz.korim.bitmap.Bitmap
 import com.soywiz.korim.bitmap.Bitmap32
 import com.soywiz.korim.bitmap.context2d
+import com.soywiz.korim.bitmap.resized
 import com.soywiz.korim.color.RGBA
 import com.soywiz.korim.paint.ColorPaint
 import com.soywiz.korim.paint.DefaultPaint
+import com.soywiz.korma.geom.Anchor
+import com.soywiz.korma.geom.ScaleMode
 import kotlin.math.min
 import kotlin.math.sqrt
 
@@ -46,18 +49,7 @@ public class SignaturePadState(
         if (minPenWidth > maxPenWidth) {
             throw IllegalArgumentException("minPenWidth cannot be less than maxPenWidth")
         }
-//        displayPaint.color = penColor.toArgb()
-//        initPaint(displayPaint)
-//        maskPaint.color = Color.Black.toArgb()
-//        initPaint(maskPaint)
     }
-
-//    private fun initPaint(paint: Paint) {
-//        paint.isAntiAlias = true
-//        paint.style = Paint.Style.STROKE
-//        paint.strokeCap = Paint.Cap.ROUND
-//        paint.strokeJoin = Paint.Join.ROUND
-//    }
 
     internal fun gestureStarted() {
         // Reset state
@@ -120,7 +112,7 @@ public class SignaturePadState(
         displayContext2d.moveTo(startPoint.x.toDouble(), startPoint.y.toDouble())
         maskContext2d.moveTo(startPoint.x.toDouble(), startPoint.y.toDouble())
         for (i in 0..drawSteps) {
-            val t = i.toFloat() / drawSteps
+            val t = i.toDouble() / drawSteps
             val tt = t * t
             val ttt = tt * t
             val u = 1 - t
@@ -136,8 +128,8 @@ public class SignaturePadState(
                     3 * u * tt * control2.y +
                     ttt * endPoint.y
 
-            displayContext2d.lineTo(x.toDouble(), y.toDouble())
-            maskContext2d.lineTo(x.toDouble(), y.toDouble())
+            displayContext2d.lineTo(x, y)
+            maskContext2d.lineTo(x, y)
         }
         displayContext2d.stroke(
             paint = ColorPaint(penColor.toRGBA()),
@@ -232,13 +224,7 @@ public class SignaturePadState(
         backgroundColor: Color = Color.White
     ): ImageBitmap {
         val maskBitmap = this.maskBitmap ?: throw Exception("Bitmap not created")
-        val result = Bitmap32(maskBitmap.width, maskBitmap.height, backgroundColor.toRGBA())
-        result.context2d {
-            stroke(paint = ColorPaint(penColor.toRGBA())) {
-                createPattern(maskBitmap)
-            }
-            scale(width, height)
-        }
+        val result = maskBitmap.resized(width, height, ScaleMode.COVER, Anchor.CENTER)
         return result.asImageBitmap()
     }
 }
