@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.dp
 import com.github.sproctor.signaturepad.SignaturePad
 import com.github.sproctor.signaturepad.rememberSignaturePadState
-import com.soywiz.korim.bitmap.Bitmap
 
 @Composable
 fun SignatureBox() {
@@ -81,7 +80,6 @@ fun SignatureBox() {
                     onClick = {
                         savedSignature = signaturePadState
                             .getSignatureBitmap(600, 400)
-                            .asImageBitmap()
                     }
                 ) {
                     Text("Capture")
@@ -92,5 +90,3 @@ fun SignatureBox() {
         Image(savedSignature!!, contentDescription = null)
     }
 }
-
-internal expect fun Bitmap.asImageBitmap(): ImageBitmap

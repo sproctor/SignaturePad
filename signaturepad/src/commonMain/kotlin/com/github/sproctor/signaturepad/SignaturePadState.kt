@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -13,6 +14,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.soywiz.korim.bitmap.Bitmap
 import com.soywiz.korim.bitmap.Bitmap32
+import com.soywiz.korim.bitmap.context2d
 import com.soywiz.korim.bitmap.resized
 import com.soywiz.korim.color.RGBA
 import com.soywiz.korim.paint.ColorPaint
@@ -199,18 +201,18 @@ public class SignaturePadState(
 
     public fun setSize(size: IntSize) {
         if (size.width != displayBitmap.value?.width || size.height != displayBitmap.value?.height) {
-            createBitmap(size.width, size.height)
+            createBitmaps(size.width, size.height)
         }
     }
 
     public fun clear() {
         val oldBitmap = displayBitmap.value
         if (oldBitmap != null) {
-            createBitmap(oldBitmap.width, oldBitmap.height)
+            createBitmaps(oldBitmap.width, oldBitmap.height)
         }
     }
 
-    private fun createBitmap(width: Int, height: Int) {
+    private fun createBitmaps(width: Int, height: Int) {
         displayBitmap.value = Bitmap32(width, height, false)
         maskBitmap = Bitmap32(width, height, false)
     }
@@ -220,9 +222,13 @@ public class SignaturePadState(
         height: Int,
         penColor: Color = Color.Black,
         backgroundColor: Color = Color.White
-    ): Bitmap {
+    ): ImageBitmap {
         val maskBitmap = this.maskBitmap ?: throw Exception("Bitmap not created")
-        return maskBitmap.resized(width, height, ScaleMode.COVER, Anchor.CENTER)
+        val result = Bitmap32(maskBitmap.width, maskBitmap.height, backgroundColor.toRGBA())
+        result.context2d {
+            drawImage(maskBitmap, 0, 0)
+        }
+        return result.resized(width, height, ScaleMode.FIT, Anchor.CENTER).asImageBitmap()
     }
 }
 
