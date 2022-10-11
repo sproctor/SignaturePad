@@ -48,7 +48,7 @@ kotlin {
             dependencies {
                 api(compose.runtime)
                 implementation(compose.foundation)
-                api("com.soywiz.korlibs.korim:korim:_")
+                implementation("com.soywiz.korlibs.korim:korim:_")
             }
         }
     }
