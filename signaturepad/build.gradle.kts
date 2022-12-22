@@ -10,11 +10,11 @@ plugins {
     id("org.jetbrains.dokka")
 }
 
-group = "com.github.sproctor"
-version = "0.9.6"
+group = "com.seanproctor"
+version = "1.0.0"
 
 android {
-    namespace = "com.github.sproctor.signaturepad"
+    namespace = "com.seanproctor.signaturepad"
 
     compileSdk = 33
 
@@ -38,10 +38,6 @@ kotlin {
             kotlinOptions.jvmTarget = "11"
         }
     }
-//    js(IR) {
-//        browser()
-//        binaries.executable()
-//    }
 
     explicitApi()
 
@@ -90,13 +86,13 @@ publishing {
     publications.withType<MavenPublication> {
         artifact(javadocJar)
         pom {
-            name.set("ONVIF Camera Kotlin")
-            description.set("A Kotlin library to interact with ONVIF cameras.")
-            url.set("https://github.com/sproctor/ONVIFCameraAndroid")
+            name.set("Compose Signature Pad")
+            description.set("A signature pad for Jetbrains Compose.")
+            url.set("https://github.com/sproctor/SignaturePad")
             licenses {
                 license {
-                    name.set("MIT")
-                    url.set("https://github.com/sproctor/ONVIFCameraAndroid/blob/master/LICENSE")
+                    name.set("Apache")
+                    url.set("https://github.com/sproctor/SignaturePad/blob/master/LICENSE")
                 }
             }
             developers {
@@ -107,7 +103,7 @@ publishing {
                 }
             }
             scm {
-                url.set("https://github.com/sproctor/ONVIFCameraAndroid/tree/main")
+                url.set("https://github.com/sproctor/SignaturePad/tree/main")
             }
         }
     }
