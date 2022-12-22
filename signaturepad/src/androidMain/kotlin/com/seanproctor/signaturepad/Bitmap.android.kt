@@ -1,4 +1,4 @@
-package com.github.sproctor.signaturepad
+package com.seanproctor.signaturepad
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap

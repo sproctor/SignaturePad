@@ -1,4 +1,4 @@
-package com.github.sproctor.signaturepad
+package com.seanproctor.signaturepad
 
 import kotlin.math.sqrt
 

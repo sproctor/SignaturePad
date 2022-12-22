@@ -49,8 +49,8 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
-                implementation("androidx.compose.ui:ui-tooling:_")
                 implementation("androidx.activity:activity-compose:_")
+                implementation(compose.preview)
             }
         }
         val jvmMain by getting {

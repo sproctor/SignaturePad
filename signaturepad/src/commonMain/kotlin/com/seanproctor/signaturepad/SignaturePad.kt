@@ -1,4 +1,4 @@
-package com.github.sproctor.signaturepad
+package com.seanproctor.signaturepad
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectDragGestures

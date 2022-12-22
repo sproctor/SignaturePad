@@ -24,8 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.dp
-import com.github.sproctor.signaturepad.SignaturePad
-import com.github.sproctor.signaturepad.rememberSignaturePadState
+import com.seanproctor.signaturepad.SignaturePad
+import com.seanproctor.signaturepad.rememberSignaturePadState
 
 @Composable
 fun SignatureBox() {
