@@ -228,7 +228,7 @@ public class SignaturePadState(
         result.context2d {
             drawImage(maskBitmap, 0, 0)
         }
-        return result.resized(width, height, ScaleMode.FIT, Anchor.CENTER).asImageBitmap()
+        return result.resized(width, height, ScaleMode.FIT, Anchor.CENTER).toComposeImageBitmap()
     }
 }
 

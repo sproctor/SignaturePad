@@ -33,10 +33,9 @@ kotlin {
     android {
         publishLibraryVariants("release")
     }
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "11"
-        }
+    jvm()
+    js(IR) {
+        browser()
     }
 
     explicitApi()
@@ -49,7 +48,21 @@ kotlin {
                 implementation("com.soywiz.korlibs.korim:korim:_")
             }
         }
+        val skikoMain by creating {
+            dependsOn(commonMain)
+            dependencies {
+                implementation(compose.ui)
+            }
+        }
+        val jvmMain by getting {
+            dependsOn(skikoMain)
+        }
+        val jsMain by getting {
+            dependsOn(skikoMain)
+        }
     }
+
+    jvmToolchain(11)
 }
 
 val localProperties = Properties().apply {

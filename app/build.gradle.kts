@@ -6,6 +6,7 @@ plugins {
 
 android {
     compileSdk = 33
+    namespace = "com.github.sproctor.signaturedemo"
 
     defaultConfig {
         applicationId = "com.github.sproctor.signaturedemo"
@@ -35,10 +36,10 @@ kotlin {
             kotlinOptions.jvmTarget = "11"
         }
     }
-//    js(IR) {
-//        browser()
-//        binaries.executable()
-//    }
+    js(IR) {
+        browser()
+        binaries.executable()
+    }
 
     sourceSets {
         val commonMain by getting {
@@ -58,11 +59,21 @@ kotlin {
                 implementation(compose.desktop.currentOs)
             }
         }
+        val jsMain by getting {
+            dependencies {
+                implementation(compose.web.core)
+            }
+        }
     }
 }
 
-compose.desktop {
-    application {
-        mainClass = "com.github.sproctor.signaturedemo.MainKt"
+compose {
+    desktop {
+        application {
+            mainClass = "com.github.sproctor.signaturedemo.MainKt"
+        }
+    }
+    experimental {
+        web.application {}
     }
 }

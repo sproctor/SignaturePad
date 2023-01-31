@@ -50,7 +50,7 @@ public fun SignaturePad(
                     )
                 }
             },
-        bitmap = bitmap?.asImageBitmap() ?: ImageBitmap(1, 1),
+        bitmap = bitmap?.toComposeImageBitmap() ?: ImageBitmap(1, 1),
         contentDescription = contentDescription
     )
 }

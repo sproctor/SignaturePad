@@ -12,13 +12,11 @@ fun main() = singleWindowApplication(
     title = "Code Viewer",
     state = WindowState(width = 1280.dp, height = 768.dp),
 ) {
-    MaterialTheme {
-        // A surface container using the 'background' color from the theme
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colors.background
-        ) {
-            SignatureBox()
-        }
+    // A surface container using the 'background' color from the theme
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colors.background
+    ) {
+        SignatureBox()
     }
 }

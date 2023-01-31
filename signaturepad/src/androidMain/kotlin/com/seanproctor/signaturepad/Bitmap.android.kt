@@ -5,6 +5,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import com.soywiz.korim.bitmap.Bitmap
 import com.soywiz.korim.format.toAndroidBitmap
 
-internal actual fun Bitmap.asImageBitmap(): ImageBitmap {
+internal actual fun Bitmap.toComposeImageBitmap(): ImageBitmap {
     return toAndroidBitmap().asImageBitmap()
 }

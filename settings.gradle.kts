@@ -1,4 +1,4 @@
-rootProject.name = "Signature Pad"
+rootProject.name = "signature-pad"
 
 include(":app")
 include(":signaturepad")
