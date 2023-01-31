@@ -5,20 +5,10 @@
 ### Multiplatform
 
 ```kotlin
-implementation("com.github.sproctor.SignaturePad:signaturepad:$signaturepad_version")
+implementation("com.seanproctor:signaturepad:$signaturepad_version")
 ```
 
-### Android
-
-```kotlin
-implementation("com.github.sproctor.SignaturePad:signaturepad-android:$signaturepad_version")
-```
-
-### JVM
-
-```kotlin
-implementation("com.github.sproctor.SignaturePad:signaturepad-jvm:$signaturepad_version")
-```
+As of 1.0.1, supported targets are Android, JVM, and JS (browser/canvas).
 
 ## Usage
 
