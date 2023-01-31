@@ -1,17 +1,12 @@
-import java.util.Properties
-import java.net.URI
-
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
     id("org.jetbrains.compose")
-    id("maven-publish")
-    id("signing")
-    id("org.jetbrains.dokka")
+    id("com.vanniktech.maven.publish.base")
 }
 
 group = "com.seanproctor"
-version = "1.0.0"
+version = "1.0.1"
 
 android {
     namespace = "com.seanproctor.signaturepad"
@@ -20,7 +15,6 @@ android {
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 33
     }
 
     compileOptions {
@@ -65,68 +59,8 @@ kotlin {
     jvmToolchain(11)
 }
 
-val localProperties = Properties().apply {
-    load(File(rootProject.rootDir, "local.properties").inputStream())
-}
-
-val dokkaOutputDir = buildDir.resolve("dokka")
-
-tasks.dokkaHtml.configure {
-    outputDirectory.set(dokkaOutputDir)
-}
-
-val deleteDokkaOutputDir by tasks.register<Delete>("deleteDokkaOutputDirectory") {
-    delete(dokkaOutputDir)
-}
-
-val javadocJar = tasks.register<Jar>("javadocJar") {
-    dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
-    archiveClassifier.set("javadoc")
-    from(dokkaOutputDir)
-}
-
-publishing {
-    repositories {
-        maven {
-            name = "sonatype"
-            url = URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = localProperties.getProperty("ossrhUsername", "")
-                password = localProperties.getProperty("ossrhPassword", "")
-            }
-        }
-    }
-    publications.withType<MavenPublication> {
-        artifact(javadocJar)
-        pom {
-            name.set("Compose Signature Pad")
-            description.set("A signature pad for Jetbrains Compose.")
-            url.set("https://github.com/sproctor/SignaturePad")
-            licenses {
-                license {
-                    name.set("Apache")
-                    url.set("https://github.com/sproctor/SignaturePad/blob/master/LICENSE")
-                }
-            }
-            developers {
-                developer {
-                    id.set("sproctor")
-                    name.set("Sean Proctor")
-                    email.set("sproctor@gmail.com")
-                }
-            }
-            scm {
-                url.set("https://github.com/sproctor/SignaturePad/tree/main")
-            }
-        }
-    }
-}
-
-ext["signing.keyId"] = localProperties.getProperty("signing.keyId", "")
-ext["signing.password"] = localProperties.getProperty("signing.password", "")
-ext["signing.secretKeyRingFile"] =
-    localProperties.getProperty("signing.secretKeyRingFile", "")
-
-signing {
-    sign(publishing.publications)
+configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
+    configure(
+        com.vanniktech.maven.publish.KotlinMultiplatform(javadocJar = com.vanniktech.maven.publish.JavadocJar.Empty())
+    )
 }
