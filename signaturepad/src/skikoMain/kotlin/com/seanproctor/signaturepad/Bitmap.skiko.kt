@@ -2,8 +2,8 @@ package com.seanproctor.signaturepad
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asComposeImageBitmap
-import com.soywiz.korim.bitmap.Bitmap
-import com.soywiz.korim.bitmap.Bitmap32
+import korlibs.image.bitmap.Bitmap
+import korlibs.image.bitmap.Bitmap32
 import org.jetbrains.skia.ColorAlphaType
 import org.jetbrains.skia.ColorInfo
 import org.jetbrains.skia.ColorType

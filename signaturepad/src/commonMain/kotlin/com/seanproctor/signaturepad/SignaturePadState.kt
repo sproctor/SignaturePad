@@ -1,10 +1,6 @@
 package com.seanproctor.signaturepad
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.neverEqualPolicy
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalDensity
@@ -12,15 +8,16 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.soywiz.korim.bitmap.Bitmap
-import com.soywiz.korim.bitmap.Bitmap32
-import com.soywiz.korim.bitmap.context2d
-import com.soywiz.korim.bitmap.resized
-import com.soywiz.korim.color.RGBA
-import com.soywiz.korim.paint.ColorPaint
-import com.soywiz.korim.paint.DefaultPaint
-import com.soywiz.korma.geom.Anchor
-import com.soywiz.korma.geom.ScaleMode
+import korlibs.image.bitmap.Bitmap
+import korlibs.image.bitmap.Bitmap32
+import korlibs.image.bitmap.context2d
+import korlibs.image.bitmap.resized
+import korlibs.image.color.RGBA
+import korlibs.image.paint.ColorPaint
+import korlibs.image.paint.DefaultPaint
+import korlibs.math.geom.Anchor
+import korlibs.math.geom.Point
+import korlibs.math.geom.ScaleMode
 import kotlin.math.min
 import kotlin.math.sqrt
 
@@ -133,12 +130,12 @@ public class SignaturePadState(
         }
         displayContext2d.stroke(
             paint = ColorPaint(penColor.toRGBA()),
-            lineWidth = lineWidth.toDouble(),
+            lineWidth = lineWidth,
             begin = false,
         )
         maskContext2d.stroke(
             paint = DefaultPaint,
-            lineWidth = lineWidth.toDouble(),
+            lineWidth = lineWidth,
             begin = false
         )
         displayContext2d.dispose()
@@ -226,7 +223,7 @@ public class SignaturePadState(
         val maskBitmap = this.maskBitmap ?: throw Exception("Bitmap not created")
         val result = Bitmap32(maskBitmap.width, maskBitmap.height, backgroundColor.toRGBA())
         result.context2d {
-            drawImage(maskBitmap, 0, 0)
+            drawImage(maskBitmap, Point(0, 0))
         }
         return result.resized(width, height, ScaleMode.FIT, Anchor.CENTER).toComposeImageBitmap()
     }
