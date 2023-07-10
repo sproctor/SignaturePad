@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.seanproctor"
-version = "1.0.3"
+version = "1.0.4"
 
 android {
     namespace = "com.seanproctor.signaturepad"
