@@ -30,7 +30,7 @@ android {
 }
 
 kotlin {
-    android()
+    androidTarget()
     jvm {
         compilations.all {
             kotlinOptions.jvmTarget = "11"
