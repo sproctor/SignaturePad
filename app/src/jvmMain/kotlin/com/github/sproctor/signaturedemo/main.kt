@@ -9,7 +9,7 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.singleWindowApplication
 
 fun main() = singleWindowApplication(
-    title = "Code Viewer",
+    title = "SignaturePad Demo",
     state = WindowState(width = 1280.dp, height = 768.dp),
 ) {
     // A surface container using the 'background' color from the theme

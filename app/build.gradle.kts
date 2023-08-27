@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    compileSdk = 33
+    compileSdk = 34
     namespace = "com.github.sproctor.signaturedemo"
 
     defaultConfig {
         applicationId = "com.github.sproctor.signaturedemo"
         minSdk = 21
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -40,6 +40,8 @@ kotlin {
         browser()
         binaries.executable()
     }
+
+    jvmToolchain(11)
 
     sourceSets {
         val commonMain by getting {

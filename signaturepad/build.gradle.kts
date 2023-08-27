@@ -11,20 +11,15 @@ version = "1.0.4"
 android {
     namespace = "com.seanproctor.signaturepad"
 
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 21
     }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
 }
 
 kotlin {
-    android {
+    androidTarget {
         publishLibraryVariants("release")
     }
     jvm()
@@ -33,6 +28,8 @@ kotlin {
     }
 
     explicitApi()
+
+    jvmToolchain(11)
 
     sourceSets {
         val commonMain by getting {
