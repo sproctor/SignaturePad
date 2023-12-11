@@ -1,4 +1,4 @@
-# Signature Pad
+# Compose Signature Pad
 
 ## Gradle dependency
 
