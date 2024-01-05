@@ -15,12 +15,12 @@ import androidx.compose.ui.unit.Dp
 
 @Composable
 public fun SignaturePad(
-    modifier: Modifier = Modifier,
     state: SignaturePadState,
-    startedSigning: (() -> Unit) = {},
-    enabled: Boolean = true,
     penColor: Color,
     penWidth: Dp,
+    modifier: Modifier = Modifier,
+    startedSigning: (() -> Unit) = {},
+    enabled: Boolean = true,
 ) {
     val penWidthPx = with(LocalDensity.current) { penWidth.toPx() }
     Canvas(
