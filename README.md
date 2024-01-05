@@ -8,18 +8,19 @@
 implementation("com.seanproctor:signaturepad:$signaturepad_version")
 ```
 
-As of 1.0.1, supported targets are Android, JVM, and JS (browser/canvas).
+As of 1.0.1, supported targets are Android, JVM, and JS (experimental canvas).
 
 ## Usage
 
 ```kotlin
-val signaturePadState = rememberSignaturePadState(penColor = Color.Black)
+val signaturePadState = rememberSignaturePadState()
 
-SignaturePad(state = signaturePadState)
+SignaturePad(state = signaturePadState, penColor = Color.Black, penWidth = 3.dp)
 
 Button(
     onClick = {
-        val bitmap = signaturePadState.getSignatureBitmap(600, 400)
+        val bitmap = ImageBitmap(600, 400)
+        signaturePadState.drawOnBitmap(penColor = Color.Black, penWidth = 2f)
         submitSignature(bitmap)
     },
 ) {
