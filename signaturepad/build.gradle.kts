@@ -23,37 +23,22 @@ kotlin {
         publishLibraryVariants("release")
     }
     jvm()
-    js(IR) {
+    js {
         browser()
     }
 
     explicitApi()
 
-    jvmToolchain(11)
+    jvmToolchain(17)
 
     sourceSets {
         val commonMain by getting {
             dependencies {
                 api(compose.runtime)
                 implementation(compose.foundation)
-                implementation("com.soywiz.korlibs.korim:korim:_")
             }
-        }
-        val skikoMain by creating {
-            dependsOn(commonMain)
-            dependencies {
-                implementation(compose.ui)
-            }
-        }
-        val jvmMain by getting {
-            dependsOn(skikoMain)
-        }
-        val jsMain by getting {
-            dependsOn(skikoMain)
         }
     }
-
-    jvmToolchain(11)
 }
 
 configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {

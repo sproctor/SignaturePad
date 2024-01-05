@@ -30,7 +30,7 @@ import com.seanproctor.signaturepad.rememberSignaturePadState
 @Composable
 fun SignatureBox() {
     var savedSignature: ImageBitmap? by remember { mutableStateOf(null) }
-    val signaturePadState = rememberSignaturePadState(penColor = Color.Black)
+    val signaturePadState = rememberSignaturePadState()
     var enabled by remember { mutableStateOf(true) }
     if (savedSignature == null) {
         Column {
@@ -44,7 +44,9 @@ fun SignatureBox() {
                     modifier = Modifier
                         .background(color = MaterialTheme.colors.onSurface.copy(alpha = 0.12f)),
                     state = signaturePadState,
-                    enabled = enabled
+                    enabled = enabled,
+                    penColor = Color.Black,
+                    penWidth = 3.dp
                 )
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -78,8 +80,8 @@ fun SignatureBox() {
                 }
                 Button(
                     onClick = {
-                        savedSignature = signaturePadState
-                            .getSignatureBitmap(600, 400)
+                        savedSignature = ImageBitmap(600, 400)
+                        signaturePadState.drawOnBitmap(savedSignature!!, Color.Black, 2f)
                     }
                 ) {
                     Text("Capture")

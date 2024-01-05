@@ -31,17 +31,13 @@ android {
 
 kotlin {
     androidTarget()
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "11"
-        }
-    }
-    js(IR) {
+    jvm()
+    js {
         browser()
         binaries.executable()
     }
 
-    jvmToolchain(11)
+    jvmToolchain(17)
 
     sourceSets {
         val commonMain by getting {
@@ -61,11 +57,6 @@ kotlin {
                 implementation(compose.desktop.currentOs)
             }
         }
-        val jsMain by getting {
-            dependencies {
-                implementation(compose.web.core)
-            }
-        }
     }
 }
 
@@ -74,8 +65,5 @@ compose {
         application {
             mainClass = "com.github.sproctor.signaturedemo.MainKt"
         }
-    }
-    experimental {
-        web.application {}
     }
 }

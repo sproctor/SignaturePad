@@ -1,56 +1,55 @@
 package com.seanproctor.signaturepad
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 
 @Composable
 public fun SignaturePad(
     modifier: Modifier = Modifier,
     state: SignaturePadState,
-    contentDescription: String? = null,
-    startedSigning: (() -> Unit)? = null,
+    startedSigning: (() -> Unit) = {},
     enabled: Boolean = true,
+    penColor: Color,
+    penWidth: Dp,
 ) {
-    val bitmap = state.displayBitmap.value
-    Image(
+    val penWidthPx = with(LocalDensity.current) { penWidth.toPx() }
+    Canvas(
         modifier = modifier
             .onSizeChanged {
-                state.setSize(it)
+                state.setSize(it.width, it.height)
             }
             .pointerInput(enabled) {
                 if (enabled) {
                     detectDragGestures(
                         onDragStart = {
-                            state.gestureStarted()
-                            if (startedSigning != null)
-                                startedSigning()
+                            state.gestureStarted(it)
+                            startedSigning()
                         },
                         onDragEnd = { },
                         onDragCancel = { },
                         onDrag = { change: PointerInputChange, _: Offset ->
-                            val prev = TimedPoint(
-                                change.previousPosition.x,
-                                change.previousPosition.y,
-                                change.previousUptimeMillis,
-                            )
-                            val point = TimedPoint(
+                            val point = Offset(
                                 change.position.x,
                                 change.position.y,
-                                change.uptimeMillis,
                             )
-                            state.gestureMoved(prev, point)
+                            state.gestureMoved(point)
                         }
                     )
                 }
             },
-        bitmap = bitmap?.toComposeImageBitmap() ?: ImageBitmap(1, 1),
-        contentDescription = contentDescription
-    )
+    ) {
+        println("drawing canvas")
+
+        state.drawSignature(this, penColor, penWidthPx)
+//        drawLine(Color.Black, Offset(100f, 100f), Offset(300f, 300f))
+    }
 }
