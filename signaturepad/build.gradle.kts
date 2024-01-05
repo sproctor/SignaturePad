@@ -1,12 +1,12 @@
 plugins {
-    id("com.android.library")
-    kotlin("multiplatform")
-    id("org.jetbrains.compose")
-    id("com.vanniktech.maven.publish.base")
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.compose)
+    alias(libs.plugins.vanniktech.maven.publish.base)
 }
 
 group = "com.seanproctor"
-version = "1.0.5"
+version = "2.0.0"
 
 android {
     namespace = "com.seanproctor.signaturepad"
