@@ -1,7 +1,6 @@
 package com.seanproctor.signaturepad
 
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.times
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PointMode
@@ -127,10 +126,10 @@ internal class Bezier(
 
     fun scale(ratio: Float): Bezier {
         return Bezier(
-            startPoint = Offset(startPoint.x * ratio, startPoint.y * ratio),
-            endPoint = Offset(endPoint.x * ratio, endPoint.y * ratio),
-            prevPoint = Offset(prevPoint.x * ratio, prevPoint.y * ratio),
-            nextPoint = Offset(nextPoint.x * ratio, nextPoint.y * ratio),
+            startPoint = startPoint * ratio,
+            endPoint = endPoint * ratio,
+            prevPoint = prevPoint * ratio,
+            nextPoint = nextPoint * ratio,
         )
     }
 }

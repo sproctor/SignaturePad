@@ -8,8 +8,6 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import kotlin.math.min
 
 public interface SignaturePadState {
@@ -41,7 +39,6 @@ public class SignaturePadStateImpl : SignaturePadState {
     }
 
     private fun addPoint(point: Offset) {
-        println("Adding point: $point")
         points.add(point)
 
         // Need 4 points to draw a cubic bezier curve.
@@ -65,7 +62,6 @@ public class SignaturePadStateImpl : SignaturePadState {
     }
 
     override fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float) {
-        println("Drawing beziers: $beziers")
         val paint = Paint()
         paint.color = penColor
         paint.strokeWidth = penWidth
