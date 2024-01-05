@@ -12,14 +12,23 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import kotlin.math.min
 
-public class SignaturePadState {
+public interface SignaturePadState {
+    public fun gestureStarted(point: Offset)
+    public fun gestureMoved(point: Offset)
+    public fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float)
+    public fun setSize(newWidth: Int, newHeight: Int)
+    public fun clear()
+    public fun drawOnBitmap(bitmap: ImageBitmap, penColor: Color, penWidth: Float)
+}
+
+public class SignaturePadStateImpl : SignaturePadState {
 
     private val points = mutableListOf<Offset>()
     private val beziers = mutableStateListOf<Bezier>()
     private var width: Int = 0
     private var height: Int = 0
 
-    internal fun gestureStarted(point: Offset) {
+    override fun gestureStarted(point: Offset) {
         // Reset state
         points.clear()
         // First segment isn't drawn
@@ -27,11 +36,11 @@ public class SignaturePadState {
         addPoint(point)
     }
 
-    internal fun gestureMoved(point: Offset) {
+    override fun gestureMoved(point: Offset) {
         addPoint(point)
     }
 
-    public fun addPoint(point: Offset) {
+    private fun addPoint(point: Offset) {
         println("Adding point: $point")
         points.add(point)
 
@@ -55,30 +64,28 @@ public class SignaturePadState {
         }
     }
 
-    public fun drawSignature(drawScope: DrawScope, penColor: Color, penWidth: Float) {
+    override fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float) {
         println("Drawing beziers: $beziers")
         val paint = Paint()
         paint.color = penColor
         paint.strokeWidth = penWidth
-        drawScope.drawIntoCanvas { canvas ->
-            beziers.forEach {
-                it.draw(canvas, paint)
-            }
+        beziers.forEach {
+            it.draw(canvas, paint)
         }
     }
 
-    public fun setSize(newWidth: Int, newHeight: Int) {
+    override fun setSize(newWidth: Int, newHeight: Int) {
         width = newWidth
         height = newHeight
         clear()
     }
 
-    public fun clear() {
+    override fun clear() {
         points.clear()
         beziers.clear()
     }
 
-    public fun drawOnBitmap(
+    override fun drawOnBitmap(
         bitmap: ImageBitmap,
         penColor: Color,
         penWidth: Float,
@@ -96,5 +103,5 @@ public class SignaturePadState {
 
 @Composable
 public fun rememberSignaturePadState(): SignaturePadState {
-    return remember { SignaturePadState() }
+    return remember { SignaturePadStateImpl() }
 }

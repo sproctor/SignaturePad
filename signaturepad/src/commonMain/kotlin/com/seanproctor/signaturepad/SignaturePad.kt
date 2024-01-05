@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -47,9 +48,8 @@ public fun SignaturePad(
                 }
             },
     ) {
-        println("drawing canvas")
-
-        state.drawSignature(this, penColor, penWidthPx)
-//        drawLine(Color.Black, Offset(100f, 100f), Offset(300f, 300f))
+        drawIntoCanvas { canvas ->
+            state.drawSignature(canvas, penColor, penWidthPx)
+        }
     }
 }
