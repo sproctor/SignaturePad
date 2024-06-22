@@ -5,17 +5,25 @@
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 vanniktech-maven-publish-base = { id = "com.vanniktech.maven.publish.base", version.ref = "vanniktech-maven" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 
 [versions]
 
-kotlin = "1.9.21"
-androidx-activity = "1.8.2"
-agp = "8.2.1"
-vanniktech-maven = "0.26.0"
-compose = "1.5.11"
+kotlin = "2.0.0"
+androidx-activity = "1.9.0"
+agp = "8.2.2"
+##⬆= "8.3.0"
+##⬆= "8.3.1"
+##⬆= "8.3.2"
+##⬆= "8.4.0"
+##⬆= "8.4.1"
+##⬆= "8.4.2"
+##⬆= "8.5.0"
+vanniktech-maven = "0.29.0"
+compose = "1.6.11"
 
 [libraries]
 

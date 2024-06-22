@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
@@ -65,8 +66,5 @@ compose {
         application {
             mainClass = "com.seanproctor.signaturedemo.MainKt"
         }
-    }
-    experimental {
-        web.application {}
     }
 }
