@@ -33,7 +33,6 @@ allprojects {
                 }
             }
         }
-        @Suppress("UnstableApiUsage")
         configure<MavenPublishBaseExtension> {
             publishToMavenCentral(SonatypeHost.S01)
             signAllPublications()
