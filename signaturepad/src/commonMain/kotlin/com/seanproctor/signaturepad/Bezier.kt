@@ -39,7 +39,12 @@ internal class Bezier(
 
             points.add(Offset(x, y))
         }
-        canvas.drawPoints(points = points, pointMode = PointMode.Points, paint = paint)
+        try {
+            canvas.drawPoints(points = points, pointMode = PointMode.Points, paint = paint)
+        } catch (e: Throwable) {
+            // Ignore drawing exceptions
+            // I think they happen when resetting canvas while we're drawing
+        }
     }
 
     private fun length(): Float {
