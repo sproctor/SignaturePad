@@ -12,14 +12,13 @@ plugins {
 }
 
 tasks.wrapper {
-    gradleVersion = "8.8"
+    gradleVersion = "8.10.2"
 }
 
 allprojects {
     repositories {
         mavenCentral()
         google()
-        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     }
 
     // Credentials must be added to ~/.gradle/gradle.properties per
