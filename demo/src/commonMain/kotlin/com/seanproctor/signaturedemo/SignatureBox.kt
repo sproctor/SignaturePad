@@ -70,19 +70,20 @@ fun SignatureBox() {
                     onClick = { enabled = !enabled }
                 ) {
                     Text(
-                        text = if (enabled) "DISABLE" else "ENABLE"
+                        text = if (enabled) "Disable" else "Enable"
                     )
                 }
                 Button(
                     onClick = { signaturePadState.clear() }
                 ) {
-                    Text("RESET")
+                    Text("Reset")
                 }
                 Button(
                     onClick = {
                         savedSignature = ImageBitmap(600, 400)
                         signaturePadState.drawOnBitmap(savedSignature!!, Color.Black, 2f)
-                    }
+                    },
+                    enabled = signaturePadState.signatureStarted.value
                 ) {
                     Text("Capture")
                 }
