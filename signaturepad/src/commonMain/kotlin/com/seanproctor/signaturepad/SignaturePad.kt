@@ -3,6 +3,8 @@ package com.seanproctor.signaturepad
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -19,7 +21,6 @@ public fun SignaturePad(
     penColor: Color,
     penWidth: Dp,
     modifier: Modifier = Modifier,
-    startedSigning: (() -> Unit) = {},
     enabled: Boolean = true,
 ) {
     val penWidthPx = with(LocalDensity.current) { penWidth.toPx() }
@@ -33,7 +34,6 @@ public fun SignaturePad(
                     detectDragGestures(
                         onDragStart = {
                             state.gestureStarted(it)
-                            startedSigning()
                         },
                         onDrag = { change: PointerInputChange, _: Offset ->
                             val point = Offset(
@@ -48,6 +48,31 @@ public fun SignaturePad(
     ) {
         drawIntoCanvas { canvas ->
             state.drawSignature(canvas, penColor, penWidthPx)
+        }
+    }
+}
+
+@Deprecated("Use SignaturePad(SignaturePadState, Color, Dp, Modifier = Modifier, Boolean) instead")
+@Composable
+public fun SignaturePad(
+    state: SignaturePadState,
+    penColor: Color,
+    penWidth: Dp,
+    modifier: Modifier = Modifier,
+    startedSigning: () -> Unit,
+    enabled: Boolean = true,
+) {
+    SignaturePad(
+        state = state,
+        penColor = penColor,
+        penWidth = penWidth,
+        modifier = modifier,
+        enabled = enabled,
+    )
+    val started by state.signatureStarted
+    LaunchedEffect(started) {
+        if (started) {
+            startedSigning()
         }
     }
 }

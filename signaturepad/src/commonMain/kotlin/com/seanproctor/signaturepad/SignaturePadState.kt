@@ -1,8 +1,6 @@
 package com.seanproctor.signaturepad
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
@@ -11,6 +9,7 @@ import androidx.compose.ui.graphics.Paint
 import kotlin.math.min
 
 public interface SignaturePadState {
+    public val signatureStarted: State<Boolean>
     public fun gestureStarted(point: Offset)
     public fun gestureMoved(point: Offset)
     public fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float)
@@ -21,12 +20,15 @@ public interface SignaturePadState {
 
 public class SignaturePadStateImpl : SignaturePadState {
 
+    private val _signatureStarted = mutableStateOf<Boolean>(false)
+    override val signatureStarted: State<Boolean> = _signatureStarted
     private val points = mutableListOf<Offset>()
     private val beziers = mutableStateListOf<Bezier>()
     private var width: Int = 0
     private var height: Int = 0
 
     override fun gestureStarted(point: Offset) {
+        _signatureStarted.value = true
         // Reset state
         points.clear()
         // First segment isn't drawn
@@ -77,6 +79,7 @@ public class SignaturePadStateImpl : SignaturePadState {
     }
 
     override fun clear() {
+        _signatureStarted.value = false
         points.clear()
         beziers.clear()
     }
