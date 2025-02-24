@@ -35,8 +35,6 @@ public fun SignaturePad(
                             state.gestureStarted(it)
                             startedSigning()
                         },
-                        onDragEnd = { },
-                        onDragCancel = { },
                         onDrag = { change: PointerInputChange, _: Offset ->
                             val point = Offset(
                                 change.position.x,
