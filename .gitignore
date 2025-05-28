@@ -84,4 +84,6 @@ app/release/*
 **/*.hprof
 .idea/assetWizardSettings.xml
 .idea/aws.xml
+.idea/AndroidProjectSystem.xml
+.idea/graphql-settings.xml
 .kotlin
