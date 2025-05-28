@@ -12,11 +12,11 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 
 [versions]
 
-kotlin = "2.1.10"
-androidx-activity = "1.10.0"
+kotlin = "2.1.21"
+androidx-activity = "1.10.1"
 agp = "8.7.3"
-vanniktech-maven = "0.30.0"
-compose = "1.7.3"
+vanniktech-maven = "0.32.0"
+compose = "1.8.1"
 
 [libraries]
 

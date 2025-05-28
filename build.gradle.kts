@@ -12,7 +12,7 @@ plugins {
 }
 
 tasks.wrapper {
-    gradleVersion = "8.10.2"
+    gradleVersion = "8.12.1"
 }
 
 allprojects {
@@ -37,7 +37,7 @@ allprojects {
             signAllPublications()
             pom {
                 name.set("Compose Signature Pad")
-                description.set("A signature pad for Jetbrains Compose.")
+                description.set("A signature pad for Compose Multiplatform.")
                 url.set("https://github.com/sproctor/SignaturePad")
                 licenses {
                     license {

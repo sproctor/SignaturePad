@@ -1,3 +1,7 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.multiplatform)
@@ -12,7 +16,7 @@ version = "2.1.0"
 android {
     namespace = "com.seanproctor.signaturepad"
 
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 21
@@ -27,6 +31,12 @@ kotlin {
     js {
         browser()
     }
+    wasmJs {
+        browser()
+    }
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     explicitApi()
 
