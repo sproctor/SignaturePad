@@ -16,11 +16,6 @@ tasks.wrapper {
 }
 
 allprojects {
-    repositories {
-        mavenCentral()
-        google()
-    }
-
     // Credentials must be added to ~/.gradle/gradle.properties per
     // https://vanniktech.github.io/gradle-maven-publish-plugin/central/#secrets
     plugins.withId("com.vanniktech.maven.publish.base") {
@@ -33,7 +28,7 @@ allprojects {
             }
         }
         configure<MavenPublishBaseExtension> {
-            publishToMavenCentral(SonatypeHost.S01)
+            publishToMavenCentral(automaticRelease = true)
             signAllPublications()
             pom {
                 name.set("Compose Signature Pad")
