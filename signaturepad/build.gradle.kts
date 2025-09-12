@@ -3,7 +3,7 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
@@ -11,21 +11,14 @@ plugins {
 }
 
 group = "com.seanproctor"
-version = "2.1.2"
-
-android {
-    namespace = "com.seanproctor.signaturepad"
-
-    compileSdk = 35
-
-    defaultConfig {
-        minSdk = 21
-    }
-}
+version = "2.1.3"
 
 kotlin {
-    androidTarget {
-        publishLibraryVariants("release")
+    androidLibrary {
+        namespace = "com.seanproctor.signaturepad"
+
+        compileSdk = 36
+        minSdk = 21
     }
     jvm()
     js {
@@ -43,7 +36,7 @@ kotlin {
     jvmToolchain(17)
 
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 api(compose.runtime)
                 implementation(compose.foundation)

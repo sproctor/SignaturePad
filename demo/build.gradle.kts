@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
     namespace = "com.seanproctor.signaturedemo"
 
     defaultConfig {
         applicationId = "com.seanproctor.signaturedemo"
         minSdk = 21
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -41,19 +41,19 @@ kotlin {
     jvmToolchain(17)
 
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 implementation(project(":signaturepad"))
                 implementation(compose.material)
             }
         }
-        val androidMain by getting {
+        androidMain {
             dependencies {
                 implementation(libs.activity.compose)
                 implementation(compose.preview)
             }
         }
-        val jvmMain by getting {
+        jvmMain {
             dependencies {
                 implementation(compose.desktop.currentOs)
             }
