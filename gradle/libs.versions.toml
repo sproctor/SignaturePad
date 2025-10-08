@@ -14,7 +14,7 @@ vanniktech-maven-publish-base = { id = "com.vanniktech.maven.publish.base", vers
 
 agp = "8.11.2"
 androidx-activity = "1.11.0"
-compose = "1.8.2"
+compose = "1.9.0"
 kotlin = "2.2.20"
 vanniktech-maven = "0.34.0"
 
