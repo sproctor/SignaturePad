@@ -18,7 +18,7 @@ kotlin {
         namespace = "com.seanproctor.signaturepad"
 
         compileSdk = 36
-        minSdk = 21
+        minSdk = 23
     }
     jvm()
     js {
@@ -38,8 +38,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(compose.runtime)
-                implementation(compose.foundation)
+                implementation(libs.compose.foundation)
             }
         }
     }

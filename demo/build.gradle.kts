@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.seanproctor.signaturedemo"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -44,13 +44,12 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(project(":signaturepad"))
-                implementation(compose.material)
+                implementation(libs.compose.material)
             }
         }
         androidMain {
             dependencies {
                 implementation(libs.activity.compose)
-                implementation(compose.preview)
             }
         }
         jvmMain {
