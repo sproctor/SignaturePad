@@ -1,41 +1,42 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
+    alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
 }
 
-android {
-    compileSdk = 36
-    namespace = "com.seanproctor.signaturedemo"
+kotlin {
+    androidLibrary {
+        namespace = "com.seanproctor.signaturedemo"
 
-    defaultConfig {
-        applicationId = "com.seanproctor.signaturedemo"
+        compileSdk = 36
         minSdk = 23
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    jvm()
+    js {
+        browser()
+        binaries.executable()
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+    jvmToolchain(17)
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation(project(":signaturepad"))
+                implementation(libs.compose.material)
+            }
+        }
+        jvmMain {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+            }
         }
     }
 }
 
-kotlin {
-    jvmToolchain(17)
-}
-
-dependencies {
-    implementation(project(":signaturepad"))
-    implementation(libs.compose.material)
-    implementation(libs.activity.compose)
+compose.desktop {
+    application {
+        mainClass = "com.seanproctor.signaturedemo.MainKt"
+    }
 }
