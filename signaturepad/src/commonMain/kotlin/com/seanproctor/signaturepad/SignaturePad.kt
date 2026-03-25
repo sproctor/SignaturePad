@@ -15,6 +15,16 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 
+/**
+ * A composable that captures a handwritten signature via drag gestures and renders it as
+ * bezier curves.
+ *
+ * @param state the [SignaturePadState] that holds the captured signature data.
+ * @param penColor the color used to draw the signature strokes.
+ * @param penWidth the width of the signature strokes in density-independent pixels.
+ * @param modifier optional [Modifier] applied to the underlying canvas.
+ * @param enabled when `false`, pointer input is ignored and the user cannot draw.
+ */
 @Composable
 public fun SignaturePad(
     state: SignaturePadState,

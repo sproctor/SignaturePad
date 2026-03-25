@@ -19,8 +19,9 @@ internal class Bezier(
     private val drawSteps = ceil(length()).roundToInt()
 
     fun draw(canvas: Canvas, paint: Paint) {
+        if (drawSteps == 0) return
         val points = mutableListOf<Offset>()
-        for (i in 0..drawSteps) {
+        repeat(drawSteps + 1) { i ->
             val t = i.toFloat() / drawSteps
             val tt = t * t
             val ttt = tt * t
@@ -41,7 +42,7 @@ internal class Bezier(
         }
         try {
             canvas.drawPoints(points = points, pointMode = PointMode.Points, paint = paint)
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             // Ignore drawing exceptions
             // I think they happen when resetting canvas while we're drawing
         }
@@ -52,7 +53,7 @@ internal class Bezier(
         var length = 0f
         var px = 0f
         var py = 0f
-        repeat(steps) { i ->
+        repeat(steps + 1) { i ->
             val t = i.toFloat() / steps
             val cx = point(
                 t, startPoint.x, control1.x,
