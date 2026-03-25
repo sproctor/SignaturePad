@@ -1,4 +1,4 @@
-package com.seanproctor.signaturedemo
+package com.seanproctor.signaturepad.demo
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

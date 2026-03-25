@@ -89,3 +89,4 @@ app/release/*
 .idea/AndroidProjectSystem.xml
 .idea/graphql-settings.xml
 .kotlin
+kotlin-js-store

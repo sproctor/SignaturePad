@@ -1,4 +1,4 @@
-package com.seanproctor.signaturedemo
+package com.seanproctor.signaturepad.demo
 
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.CanvasBasedWindow
@@ -9,8 +9,8 @@ import org.jetbrains.skiko.wasm.onWasmReady
 fun main() {
     onWasmReady {
         @Suppress("DEPRECATION_ERROR")
-        CanvasBasedWindow("Signature Pad Demo") {
+        (CanvasBasedWindow("Signature Pad Demo") {
             SignatureBox()
-        }
+        })
     }
 }

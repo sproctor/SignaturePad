@@ -1,10 +1,9 @@
-package com.seanproctor.signaturedemo
+package com.seanproctor.signaturepad.androiddemo
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
+import com.seanproctor.signaturepad.demo.SignatureBox
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

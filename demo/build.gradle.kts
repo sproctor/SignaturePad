@@ -7,7 +7,7 @@ plugins {
 
 kotlin {
     androidLibrary {
-        namespace = "com.seanproctor.signaturedemo"
+        namespace = "com.seanproctor.signaturepad.demo"
 
         compileSdk = 36
         minSdk = 23

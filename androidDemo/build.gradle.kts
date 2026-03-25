@@ -7,7 +7,7 @@ plugins {
 
 android {
     compileSdk = 36
-    namespace = "com.seanproctor.signaturedemo"
+    namespace = "com.seanproctor.signaturepad"
 
     defaultConfig {
         applicationId = "com.seanproctor.signaturedemo"

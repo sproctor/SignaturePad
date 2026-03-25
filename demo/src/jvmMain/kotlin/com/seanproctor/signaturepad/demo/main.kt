@@ -1,4 +1,4 @@
-package com.seanproctor.signaturedemo
+package com.seanproctor.signaturepad.demo
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
