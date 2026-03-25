@@ -37,6 +37,8 @@
 .idea/modules.xml
 .idea/*.iml
 .idea/modules
+.idea/caches
+.idea/appInsightsSettings.xml
 *.iml
 *.ipr
 

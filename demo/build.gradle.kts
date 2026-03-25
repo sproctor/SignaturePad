@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
 }
@@ -31,39 +31,11 @@ android {
 }
 
 kotlin {
-    androidTarget()
-    jvm()
-    js {
-        browser()
-        binaries.executable()
-    }
-
     jvmToolchain(17)
-
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation(project(":signaturepad"))
-                implementation(libs.compose.material)
-            }
-        }
-        androidMain {
-            dependencies {
-                implementation(libs.activity.compose)
-            }
-        }
-        jvmMain {
-            dependencies {
-                implementation(compose.desktop.currentOs)
-            }
-        }
-    }
 }
 
-compose {
-    desktop {
-        application {
-            mainClass = "com.seanproctor.signaturedemo.MainKt"
-        }
-    }
+dependencies {
+    implementation(project(":signaturepad"))
+    implementation(libs.compose.material)
+    implementation(libs.activity.compose)
 }
