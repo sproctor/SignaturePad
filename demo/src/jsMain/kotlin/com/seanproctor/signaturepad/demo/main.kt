@@ -1,16 +1,15 @@
 package com.seanproctor.signaturepad.demo
 
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.window.CanvasBasedWindow
+import androidx.compose.ui.window.ComposeViewport
+import kotlinx.browser.document
 import org.jetbrains.skiko.wasm.onWasmReady
 
-@Suppress("DEPRECATION_ERROR")
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     onWasmReady {
-        @Suppress("DEPRECATION_ERROR")
-        (CanvasBasedWindow("Signature Pad Demo") {
+        ComposeViewport(document.body!!) {
             SignatureBox()
-        })
+        }
     }
 }
