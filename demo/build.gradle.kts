@@ -37,6 +37,6 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "com.seanproctor.signaturedemo.MainKt"
+        mainClass = "com.seanproctor.signaturepad.demo.MainKt"
     }
 }
