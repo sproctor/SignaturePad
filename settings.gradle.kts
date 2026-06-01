@@ -25,7 +25,7 @@ include(":demo")
 include(":signaturepad")
 
 refreshVersions {
-    // work-around https://github.com/Splitties/refreshVersions/issues/640
+
     file("build/tmp/refreshVersions").mkdirs()
     versionsPropertiesFile = file("build/tmp/refreshVersions/versions.properties")
     rejectVersionIf {
