@@ -23,7 +23,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Build package
-        run: ./gradlew build
+        run: ./gradlew :signaturepad:build
 
       - name: Publish release
         run: ./gradlew publishToMavenCentral --no-configuration-cache
