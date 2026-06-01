@@ -89,7 +89,6 @@ app/release/*
 .idea/AndroidProjectSystem.xml
 .idea/graphql-settings.xml
 .kotlin
-kotlin-js-store
 
 # work-around https://github.com/Splitties/refreshVersions/issues/640
 versions.properties
