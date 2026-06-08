@@ -88,23 +88,6 @@ internal class Bezier(
         p2: Offset,
         p3: Offset,
     ): Pair<Offset, Offset> {
-        // http://scaledinnovation.com/analytics/splines/aboutSplines.html
-//        val d1 = p1.distanceTo(p2)
-//        val d2 = p2.distanceTo(p3)
-//        val t = 0.4f
-//        val fa = (t * d1 / (d1 + d2)).whenNaN { 0f }
-//        val fb = (t * d2 / (d1 + d2)).whenNaN { 0f }
-//        val cp1x = p2.x - fa * (p3.x - p1.x)
-//        val cp1y = p2.y - fa * (p3.y - p1.y)
-//        val cp2x = p2.x + fb * (p3.x - p1.x)
-//        val cp2y = p2.y + fb * (p3.y - p1.y)
-//        val cp1 = Point(cp1x, cp1y)
-//        val cp2 = Point(cp2x, cp2y)
-//        println("p1: (${p1.x}, ${p1.y}), p2: (${p2.x}, ${p2.y}), p3: (${p3.x}, ${p3.y})")
-//        println("d1: $d1, d2: $d2, fa: $fa, fb: $fb")
-//        println("cp1: ($cp1x, $cp1y), cp3: ($cp2x, $cp2y)")
-//        return Pair(cp1, cp2)
-        // Unknown origin - from original signature pad
         val dx1 = p1.x - p2.x
         val dy1 = p1.y - p2.y
         val dx2 = p2.x - p3.x
