@@ -2,6 +2,7 @@ package com.seanproctor.signaturepad
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -29,9 +30,9 @@ public interface SignaturePadState {
     public fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float)
 
     /**
-     * Updates the logical size of the signature area. If the size changes, the current signature
-     * is cleared because the existing point coordinates would no longer map correctly to the
-     * new dimensions.
+     * Updates the logical size of the signature area. If the size changes, the existing signature
+     * is remapped to the new dimensions according to the state's [ResizeBehavior] (cleared,
+     * recentered, scaled, or transformed by a custom mapper).
      */
     public fun setSize(newWidth: Int, newHeight: Int)
 
@@ -47,7 +48,9 @@ public interface SignaturePadState {
     public fun drawOnBitmap(bitmap: ImageBitmap, penColor: Color, penWidth: Float)
 }
 
-public class SignaturePadStateImpl : SignaturePadState {
+public class SignaturePadStateImpl(
+    private val resizeBehavior: ResizeBehavior = ResizeBehavior.Clear,
+) : SignaturePadState {
 
     private val _signatureStarted = mutableStateOf(false)
     override val signatureStarted: State<Boolean> = _signatureStarted
@@ -107,9 +110,28 @@ public class SignaturePadStateImpl : SignaturePadState {
 
     override fun setSize(newWidth: Int, newHeight: Int) {
         if (width == newWidth && height == newHeight) return
+        val oldWidth = width
+        val oldHeight = height
         width = newWidth
         height = newHeight
-        clear()
+
+        // The first layout pass establishes the size from nothing, so there is nothing to remap.
+        if (oldWidth == 0 || oldHeight == 0) return
+
+        if (resizeBehavior == ResizeBehavior.Clear) {
+            clear()
+            return
+        }
+
+        points.clear()
+
+        val oldSize = Size(oldWidth.toFloat(), oldHeight.toFloat())
+        val newSize = Size(newWidth.toFloat(), newHeight.toFloat())
+        val remapped = beziers.map { bezier ->
+            bezier.map { point -> resizeBehavior.mapPoint(point, oldSize, newSize) }
+        }
+        beziers.clear()
+        beziers.addAll(remapped)
     }
 
     override fun clear() {
@@ -134,8 +156,15 @@ public class SignaturePadStateImpl : SignaturePadState {
     }
 }
 
-/** Creates and remembers a [SignaturePadState] scoped to the current composition. */
+/**
+ * Creates and remembers a [SignaturePadState] scoped to the current composition.
+ *
+ * @param resizeBehavior how an in-progress signature is transformed when the pad is resized.
+ * Defaults to [ResizeBehavior.Clear].
+ */
 @Composable
-public fun rememberSignaturePadState(): SignaturePadState {
-    return remember { SignaturePadStateImpl() }
+public fun rememberSignaturePadState(
+    resizeBehavior: ResizeBehavior = ResizeBehavior.Clear,
+): SignaturePadState {
+    return remember(resizeBehavior) { SignaturePadStateImpl(resizeBehavior) }
 }
