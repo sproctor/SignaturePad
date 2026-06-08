@@ -113,14 +113,27 @@ internal class Bezier(
         return Pair(Offset(m1x + tx, m1y + ty), Offset(m2x + tx, m2y + ty))
     }
 
-    fun scale(ratio: Float): Bezier {
+    /**
+     * Returns a copy of this curve with [transform] applied to each of its source points. The
+     * control points are recomputed from the transformed anchors, so any affine mapping produces a
+     * correctly shaped curve.
+     */
+    fun map(transform: (Offset) -> Offset): Bezier {
         return Bezier(
-            startPoint = startPoint * ratio,
-            endPoint = endPoint * ratio,
-            prevPoint = prevPoint * ratio,
-            nextPoint = nextPoint * ratio,
+            startPoint = transform(startPoint),
+            endPoint = transform(endPoint),
+            prevPoint = transform(prevPoint),
+            nextPoint = transform(nextPoint),
         )
     }
+
+    fun scale(ratio: Float): Bezier = map { it * ratio }
+
+    /**
+     * The four points this curve was built from, in the order the constructor accepts them
+     * (start, end, prev, next). Used to serialize and rebuild the curve exactly.
+     */
+    fun sourcePoints(): List<Offset> = listOf(startPoint, endPoint, prevPoint, nextPoint)
 }
 
 private fun Float.whenNaN(then: () -> Float): Float =
