@@ -26,7 +26,7 @@ jobs:
         run: ./gradlew :signaturepad:build
 
       - name: Publish release
-        run: ./gradlew publishToMavenCentral --no-configuration-cache
+        run: ./gradlew :signaturepad:publishToMavenCentral --no-configuration-cache
         if: success()
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
