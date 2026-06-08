@@ -70,6 +70,10 @@ public class SignaturePadStateImpl : SignaturePadState {
     }
 
     private fun addPoint(point: Offset) {
+        // Don't add points outside the bounds
+        if (point.x < 0 || point.x > width || point.y < 0 || point.y > height)
+            return
+
         points.add(point)
 
         // Need 4 points to draw a cubic bezier curve.
