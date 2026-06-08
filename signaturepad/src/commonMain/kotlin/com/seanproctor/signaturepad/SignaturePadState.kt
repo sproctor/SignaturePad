@@ -1,6 +1,9 @@
 package com.seanproctor.signaturepad
 
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
@@ -140,6 +143,54 @@ public class SignaturePadStateImpl(
         beziers.clear()
     }
 
+    /**
+     * Flattens the captured signature to a list of floats for [rememberSaveable]: the pad size, the
+     * started flag, then each curve's four source points as `x, y` pairs.
+     */
+    internal fun toFloatList(): List<Float> {
+        val data = ArrayList<Float>(SAVE_HEADER_SIZE + beziers.size * FLOATS_PER_BEZIER)
+        data.add(width.toFloat())
+        data.add(height.toFloat())
+        data.add(if (_signatureStarted.value) 1f else 0f)
+        for (bezier in beziers) {
+            for (point in bezier.sourcePoints()) {
+                data.add(point.x)
+                data.add(point.y)
+            }
+        }
+        return data
+    }
+
+    /** Restores the signature previously produced by [toFloatList]. */
+    internal fun restoreFromFloatList(data: List<Float>) {
+        if (data.size < SAVE_HEADER_SIZE) return
+        width = data[0].toInt()
+        height = data[1].toInt()
+        _signatureStarted.value = data[2] != 0f
+        points.clear()
+        beziers.clear()
+        var i = SAVE_HEADER_SIZE
+        while (i + FLOATS_PER_BEZIER <= data.size) {
+            beziers.add(
+                Bezier(
+                    startPoint = Offset(data[i], data[i + 1]),
+                    endPoint = Offset(data[i + 2], data[i + 3]),
+                    prevPoint = Offset(data[i + 4], data[i + 5]),
+                    nextPoint = Offset(data[i + 6], data[i + 7]),
+                )
+            )
+            i += FLOATS_PER_BEZIER
+        }
+    }
+
+    private companion object {
+        // width, height, signatureStarted
+        const val SAVE_HEADER_SIZE = 3
+
+        // four source points, each an (x, y) pair
+        const val FLOATS_PER_BEZIER = 8
+    }
+
     override fun drawOnBitmap(
         bitmap: ImageBitmap,
         penColor: Color,
@@ -157,14 +208,43 @@ public class SignaturePadStateImpl(
 }
 
 /**
- * Creates and remembers a [SignaturePadState] scoped to the current composition.
+ * A [Saver] that lets a [SignaturePadState] survive configuration changes and process death via
+ * [rememberSaveable]. The captured signature is preserved; [resizeBehavior] is supplied here rather
+ * than saved, because it may hold a non-serializable lambda ([ResizeBehavior.Custom]).
  *
- * @param resizeBehavior how an in-progress signature is transformed when the pad is resized.
- * Defaults to [ResizeBehavior.Clear].
+ * Most callers can rely on [rememberSignaturePadState], which already saves through this. Use this
+ * directly only when managing the state with your own [rememberSaveable] call.
  */
+public fun SignaturePadStateSaver(
+    resizeBehavior: ResizeBehavior = ResizeBehavior.Clear,
+): Saver<SignaturePadState, Any> = listSaver(
+    save = { state -> (state as SignaturePadStateImpl).toFloatList() },
+    restore = { data -> SignaturePadStateImpl(resizeBehavior).apply { restoreFromFloatList(data) } },
+)
+
+/** Creates and remembers a [SignaturePadState] scoped to the current composition. */
 @Composable
 public fun rememberSignaturePadState(
     resizeBehavior: ResizeBehavior = ResizeBehavior.Clear,
 ): SignaturePadState {
     return remember(resizeBehavior) { SignaturePadStateImpl(resizeBehavior) }
+}
+
+/**
+ * Creates and remembers a [SignaturePadState] that survives configuration changes and process death
+ * via [rememberSaveable]. Use this instead of [rememberSignaturePadState] when the captured
+ * signature must be preserved across such events (e.g. an orientation change).
+ *
+ * @param resizeBehavior how an in-progress signature is transformed when the pad is resized.
+ * Defaults to [ResizeBehavior.Clear]. Note that on a size change (e.g. an orientation change) the
+ * restored signature is remapped according to this behavior, so [ResizeBehavior.Clear] will discard
+ * it — choose another behavior to keep the signature across such changes.
+ */
+@Composable
+public fun rememberSaveableSignaturePadState(
+    resizeBehavior: ResizeBehavior = ResizeBehavior.Clear,
+): SignaturePadState {
+    return rememberSaveable(resizeBehavior, saver = SignaturePadStateSaver(resizeBehavior)) {
+        SignaturePadStateImpl(resizeBehavior)
+    }
 }

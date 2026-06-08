@@ -107,4 +107,33 @@ class SignaturePadStateTest {
         assertEquals(Size(100f, 100f), seenOld)
         assertEquals(Size(200f, 150f), seenNew)
     }
+
+    @Test
+    fun saveAndRestore_roundTrips_signatureData() {
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        state.gestureStarted(Offset(10f, 10f))
+        state.gestureMoved(Offset(20f, 25f))
+        state.gestureMoved(Offset(30f, 15f))
+        state.gestureMoved(Offset(40f, 35f))
+        val saved = state.toFloatList()
+
+        val restored = SignaturePadStateImpl()
+        restored.restoreFromFloatList(saved)
+
+        assertTrue(restored.signatureStarted.value, "restored state must remember it was started")
+        // Re-serializing the restored state must yield identical data: size, flag, and every curve.
+        assertEquals(saved, restored.toFloatList())
+    }
+
+    @Test
+    fun restore_fromEmptyState_isNoOp() {
+        val empty = SignaturePadStateImpl().toFloatList()
+
+        val restored = SignaturePadStateImpl()
+        restored.restoreFromFloatList(empty)
+
+        assertFalse(restored.signatureStarted.value)
+        assertEquals(empty, restored.toFloatList())
+    }
 }

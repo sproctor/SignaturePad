@@ -128,6 +128,12 @@ internal class Bezier(
     }
 
     fun scale(ratio: Float): Bezier = map { it * ratio }
+
+    /**
+     * The four points this curve was built from, in the order the constructor accepts them
+     * (start, end, prev, next). Used to serialize and rebuild the curve exactly.
+     */
+    fun sourcePoints(): List<Offset> = listOf(startPoint, endPoint, prevPoint, nextPoint)
 }
 
 private fun Float.whenNaN(then: () -> Float): Float =
