@@ -1,4 +1,7 @@
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnLockMismatchReport
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
@@ -11,6 +14,12 @@ plugins {
 
 tasks.wrapper {
     gradleVersion = "9.5.1"
+}
+
+// kotlin-js-store/yarn.lock resolves to slightly different contents across platforms (e.g. CI
+// macOS vs a Linux dev machine), so don't fail the build on a mismatch — warn instead.
+plugins.withType<YarnPlugin> {
+    the<YarnRootExtension>().yarnLockMismatchReport = YarnLockMismatchReport.WARNING
 }
 
 allprojects {
