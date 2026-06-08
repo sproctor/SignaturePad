@@ -25,9 +25,6 @@ include(":demo")
 include(":signaturepad")
 
 refreshVersions {
-
-    file("build/tmp/refreshVersions").mkdirs()
-    versionsPropertiesFile = file("build/tmp/refreshVersions/versions.properties")
     rejectVersionIf {
         candidate.stabilityLevel.isLessStableThan(current.stabilityLevel)
     }
