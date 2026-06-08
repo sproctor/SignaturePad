@@ -40,6 +40,17 @@ kotlin {
                 implementation(libs.compose.foundation)
             }
         }
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+        jvmTest {
+            dependencies {
+                // Provides the skiko native runtime so Paint()/Canvas can be exercised on the JVM.
+                implementation(compose.desktop.currentOs)
+            }
+        }
     }
 }
 
