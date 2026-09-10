@@ -17,10 +17,10 @@ group = "com.seanproctor"
 version = "2.3.0"
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "com.seanproctor.signaturepad"
 
-        compileSdk = 36
+        compileSdk = 37
         minSdk = 23
     }
     jvm()
@@ -39,7 +39,7 @@ kotlin {
     targets.withType<KotlinNativeTarget>().configureEach {
         binaries.all {
             disableNativeCache(
-                version = DisableCacheInKotlinVersion.`2_4_0`,
+                version = DisableCacheInKotlinVersion.`2_4_20`,
                 reason = "Compose ui-uikit cache references newer UIKit symbols that fail to link",
             )
         }
@@ -67,6 +67,13 @@ kotlin {
             }
         }
     }
+}
+
+// Compose's web UI-test check fails any js/wasm test compilation that depends on Skiko unless the
+// target declares an executable binary. Foundation pulls Skiko in transitively, but these tests never
+// render, so skip the check rather than building executable web bundles for a library.
+tasks.matching { it.name.startsWith("checkComposeUiTestConfigurationFor") }.configureEach {
+    enabled = false
 }
 
 configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
