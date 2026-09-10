@@ -14,7 +14,7 @@ plugins {
 }
 
 group = "com.seanproctor"
-version = "2.3.0"
+version = "2.3.1"
 
 kotlin {
     android {
