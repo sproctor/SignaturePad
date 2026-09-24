@@ -27,6 +27,12 @@ public interface SignaturePadState {
     public fun gestureMoved(point: Offset)
 
     /**
+     * Called when the drag gesture ends or is cancelled. Draws the last segment of the stroke, which
+     * [gestureMoved] holds back until it knows the next point.
+     */
+    public fun gestureEnded() {}
+
+    /**
      * Draws the full signature onto [canvas] using the given [penColor] and [penWidth] (in pixels).
      * Typically called from within a Compose `drawIntoCanvas` block.
      */
@@ -100,6 +106,16 @@ public class SignaturePadStateImpl(
             // Remove the first point
             points.removeAt(0)
         }
+    }
+
+    override fun gestureEnded() {
+        // The last segment is still waiting for a next point that won't come. Draw it with its own
+        // end point standing in for the next one, the same way the first segment reuses its start.
+        if (points.size >= 3) {
+            val (prevPoint, startPoint, endPoint) = points.takeLast(3)
+            beziers.add(Bezier(startPoint, endPoint, prevPoint, endPoint))
+        }
+        points.clear()
     }
 
     override fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float) {
