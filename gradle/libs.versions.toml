@@ -22,3 +22,4 @@ vanniktech-maven = "0.37.0"
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidx-activity" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
 compose-material = { module = "org.jetbrains.compose.material:material", version.ref = "compose" }
+compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose" }

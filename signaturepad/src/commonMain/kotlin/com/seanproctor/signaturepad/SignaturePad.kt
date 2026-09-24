@@ -39,7 +39,7 @@ public fun SignaturePad(
             .onSizeChanged {
                 state.setSize(it.width, it.height)
             }
-            .pointerInput(enabled) {
+            .pointerInput(state, enabled) {
                 if (enabled) {
                     detectDragGestures(
                         onDragStart = {
