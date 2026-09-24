@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.StrokeCap
 import kotlin.math.min
 
 /**
@@ -129,9 +130,7 @@ public class SignaturePadStateImpl(
     }
 
     override fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float) {
-        val paint = Paint()
-        paint.color = penColor
-        paint.strokeWidth = penWidth
+        val paint = penPaint(penColor, penWidth)
         beziers.forEach {
             it.draw(canvas, paint)
         }
@@ -227,14 +226,6 @@ public class SignaturePadStateImpl(
         }
     }
 
-    private companion object {
-        // width, height, signatureStarted
-        const val SAVE_HEADER_SIZE = 3
-
-        // four source points, each an (x, y) pair
-        const val FLOATS_PER_BEZIER = 8
-    }
-
     override fun drawOnBitmap(
         bitmap: ImageBitmap,
         penColor: Color,
@@ -242,12 +233,26 @@ public class SignaturePadStateImpl(
     ) {
         val scaling = min(bitmap.width / width.toFloat(), bitmap.height / height.toFloat())
         val canvas = Canvas(bitmap)
-        val paint = Paint()
-        paint.color = penColor
-        paint.strokeWidth = penWidth
+        val paint = penPaint(penColor, penWidth)
         beziers.forEach {
             it.scale(scaling).draw(canvas, paint)
         }
+    }
+
+    private fun penPaint(color: Color, width: Float) = Paint().apply {
+        this.color = color
+        strokeWidth = width
+        // Curves are drawn as runs of points. A round cap makes each point a dot instead of a square,
+        // so lines keep the same width in every direction.
+        strokeCap = StrokeCap.Round
+    }
+
+    private companion object {
+        // width, height, signatureStarted
+        const val SAVE_HEADER_SIZE = 3
+
+        // four source points, each an (x, y) pair
+        const val FLOATS_PER_BEZIER = 8
     }
 }
 
