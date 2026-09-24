@@ -2,6 +2,7 @@ package com.seanproctor.signaturepad
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -56,5 +57,16 @@ class SignaturePadDrawingTest {
 
         // n moves -> n-1 cubic bezier segments.
         assertEquals(moves.size - 1, drawTo(state).drawnStrokes.size)
+    }
+
+    @Test
+    fun drawSignature_usesRoundPen() {
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        state.gestureStarted(Offset(0f, 0f))
+        listOf(Offset(10f, 10f), Offset(20f, 0f), Offset(30f, 10f)).forEach { state.gestureMoved(it) }
+
+        // Square caps make diagonal lines wider than horizontal ones.
+        assertEquals(StrokeCap.Round, drawTo(state).lastPaint?.strokeCap)
     }
 }

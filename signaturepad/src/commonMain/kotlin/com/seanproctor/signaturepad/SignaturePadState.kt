@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.StrokeCap
 import kotlin.math.min
 
 /**
@@ -106,6 +107,9 @@ public class SignaturePadStateImpl(
         val paint = Paint()
         paint.color = penColor
         paint.strokeWidth = penWidth
+        // Curves are drawn as runs of points. A round cap makes each point a dot instead of a square,
+        // so lines keep the same width in every direction.
+        paint.strokeCap = StrokeCap.Round
         beziers.forEach {
             it.draw(canvas, paint)
         }
@@ -201,6 +205,7 @@ public class SignaturePadStateImpl(
         val paint = Paint()
         paint.color = penColor
         paint.strokeWidth = penWidth
+        paint.strokeCap = StrokeCap.Round
         beziers.forEach {
             it.scale(scaling).draw(canvas, paint)
         }

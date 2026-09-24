@@ -26,8 +26,12 @@ class RecordingCanvas : Canvas {
     /** Every point across all [drawPoints] calls, flattened. */
     val allPoints: List<Offset> get() = drawnStrokes.flatten()
 
+    /** The paint passed to the most recent [drawPoints] call. */
+    var lastPaint: Paint? = null
+
     override fun drawPoints(pointMode: PointMode, points: List<Offset>, paint: Paint) {
         drawnStrokes.add(points.toList())
+        lastPaint = paint
     }
 
     override fun save() {}
