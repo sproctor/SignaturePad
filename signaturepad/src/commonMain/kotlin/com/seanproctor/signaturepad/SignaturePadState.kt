@@ -125,6 +125,10 @@ public class SignaturePadStateImpl(
         if (points.size >= 3) {
             val (prevPoint, startPoint, endPoint) = points.takeLast(3)
             beziers.add(Bezier(startPoint, endPoint, prevPoint, endPoint))
+        } else if (points.size == 2) {
+            // Usually a tap: its only point is buffered twice, so this draws a dot.
+            val (startPoint, endPoint) = points
+            beziers.add(Bezier(startPoint, endPoint, startPoint, endPoint))
         }
         points.clear()
     }

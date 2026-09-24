@@ -2,6 +2,7 @@ package com.seanproctor.signaturepad
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +39,22 @@ public fun SignaturePad(
     Canvas(
         modifier = modifier
             .clipToBounds()
+            .pointerInput(state, enabled) {
+                if (enabled) {
+                    // A tap, or a mark too short to pass the touch slop, never starts a drag, so
+                    // draw it as a dot where the finger lifted. Once a drag takes over, the tap is
+                    // cancelled. A tap that lifts outside the pad is skipped, so it doesn't mark
+                    // the signature as started without drawing anything.
+                    detectTapGestures { position ->
+                        if (position.x in 0f..size.width.toFloat() &&
+                            position.y in 0f..size.height.toFloat()
+                        ) {
+                            state.gestureStarted(position)
+                            state.gestureEnded()
+                        }
+                    }
+                }
+            }
             .onSizeChanged {
                 state.setSize(it.width, it.height)
             }

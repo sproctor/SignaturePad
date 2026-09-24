@@ -19,10 +19,10 @@ internal class Bezier(
     private val drawSteps = ceil(length()).roundToInt()
 
     fun draw(canvas: Canvas, paint: Paint) {
-        if (drawSteps == 0) return
         val points = mutableListOf<Offset>()
         repeat(drawSteps + 1) { i ->
-            val t = i.toFloat() / drawSteps
+            // A zero-length curve (a tap) gets a single point at its start, which draws as a dot.
+            val t = if (drawSteps == 0) 0f else i.toFloat() / drawSteps
             val tt = t * t
             val ttt = tt * t
             val u = 1 - t
