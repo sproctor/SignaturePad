@@ -62,6 +62,16 @@ public class SignaturePadStateImpl(
     private var width: Int = 0
     private var height: Int = 0
 
+    // The curves the on-screen ones were last remapped from, and the pad size they belong to. Each
+    // resize maps from these rather than from the previous result, so going back and forth between
+    // sizes (rotating and rotating back, say) puts the signature back exactly where it was.
+    private var remapSource: List<Bezier> = emptyList()
+    private var remapSourceSize = Size.Zero
+
+    // The curve count right after the last remap. If it differs, strokes were drawn since and what's
+    // on screen becomes the new source.
+    private var remappedCount = -1
+
     override fun gestureStarted(point: Offset) {
         _signatureStarted.value = true
         // Reset state
@@ -112,6 +122,9 @@ public class SignaturePadStateImpl(
     }
 
     override fun setSize(newWidth: Int, newHeight: Int) {
+        // Nothing can be drawn at a zero size (while the pad is collapsed, for example), so keep the
+        // signature as it is and remap from the last real size once the pad is laid out again.
+        if (newWidth <= 0 || newHeight <= 0) return
         if (width == newWidth && height == newHeight) return
         val oldWidth = width
         val oldHeight = height
@@ -128,31 +141,45 @@ public class SignaturePadStateImpl(
 
         points.clear()
 
-        val oldSize = Size(oldWidth.toFloat(), oldHeight.toFloat())
+        if (beziers.size != remappedCount) {
+            remapSource = beziers.toList()
+            remapSourceSize = Size(oldWidth.toFloat(), oldHeight.toFloat())
+        }
         val newSize = Size(newWidth.toFloat(), newHeight.toFloat())
-        val remapped = beziers.map { bezier ->
-            bezier.map { point -> resizeBehavior.mapPoint(point, oldSize, newSize) }
+        val remapped = remapSource.map { bezier ->
+            bezier.map { point -> resizeBehavior.mapPoint(point, remapSourceSize, newSize) }
         }
         beziers.clear()
         beziers.addAll(remapped)
+        remappedCount = beziers.size
     }
 
     override fun clear() {
         _signatureStarted.value = false
         points.clear()
         beziers.clear()
+        resetRemapSource()
+    }
+
+    private fun resetRemapSource() {
+        remapSource = emptyList()
+        remappedCount = -1
     }
 
     /**
-     * Flattens the captured signature to a list of floats for [rememberSaveable]: the pad size, the
-     * started flag, then each curve's four source points as `x, y` pairs.
+     * Flattens the captured signature to a list of floats for [rememberSaveable]: the pad size the
+     * curves belong to, the started flag, then each curve's four source points as `x, y` pairs.
      */
     internal fun toFloatList(): List<Float> {
-        val data = ArrayList<Float>(SAVE_HEADER_SIZE + beziers.size * FLOATS_PER_BEZIER)
-        data.add(width.toFloat())
-        data.add(height.toFloat())
+        // Save the remap source while it's still current, so that resizing after a restore (the
+        // activity is recreated on rotation) also maps from it.
+        val fromSource = beziers.size == remappedCount
+        val saved = if (fromSource) remapSource else beziers
+        val data = ArrayList<Float>(SAVE_HEADER_SIZE + saved.size * FLOATS_PER_BEZIER)
+        data.add(if (fromSource) remapSourceSize.width else width.toFloat())
+        data.add(if (fromSource) remapSourceSize.height else height.toFloat())
         data.add(if (_signatureStarted.value) 1f else 0f)
-        for (bezier in beziers) {
+        for (bezier in saved) {
             for (point in bezier.sourcePoints()) {
                 data.add(point.x)
                 data.add(point.y)
@@ -169,6 +196,7 @@ public class SignaturePadStateImpl(
         _signatureStarted.value = data[2] != 0f
         points.clear()
         beziers.clear()
+        resetRemapSource()
         var i = SAVE_HEADER_SIZE
         while (i + FLOATS_PER_BEZIER <= data.size) {
             beziers.add(
