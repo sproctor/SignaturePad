@@ -42,9 +42,21 @@ public fun SignaturePad(
             .pointerInput(state, enabled) {
                 if (enabled) {
                     detectDragGestures(
-                        onDragStart = {
-                            state.gestureStarted(it)
+                        orientationLock = null,
+                        // Start where the finger went down rather than where it crossed the touch
+                        // slop, so the beginning of the stroke isn't cut off.
+                        onDragStart = { down, _, _ ->
+                            state.gestureStarted(down.position)
                         },
+                        onDragEnd = { up ->
+                            // The up event isn't passed to onDrag, but it can still carry the
+                            // last bit of movement.
+                            if (up.position != up.previousPosition) {
+                                state.gestureMoved(up.position)
+                            }
+                            state.gestureEnded()
+                        },
+                        onDragCancel = { state.gestureEnded() },
                         onDrag = { change: PointerInputChange, _: Offset ->
                             val point = Offset(
                                 change.position.x,
