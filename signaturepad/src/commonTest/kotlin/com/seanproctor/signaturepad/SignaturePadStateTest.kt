@@ -167,8 +167,56 @@ class SignaturePadStateTest {
         assertEquals(Offset(18f, 10f), state.lastCurveEnd())
     }
 
+    @Test
+    fun leavingAndReenteringThePad_doesNotJoinTheTwoParts() {
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        state.gestureStarted(Offset(10f, 10f))
+        listOf(Offset(20f, 10f), Offset(30f, 10f), Offset(40f, 10f)).forEach { state.gestureMoved(it) }
+        // Out through the left edge, then back in lower down.
+        listOf(Offset(-5f, 50f), Offset(10f, 90f), Offset(20f, 90f), Offset(30f, 90f), Offset(40f, 90f))
+            .forEach { state.gestureMoved(it) }
+        state.gestureEnded()
+
+        val curves = state.curves()
+        assertTrue(curves.any { (_, end) -> end == Offset(40f, 90f) }, "the part after re-entering must be drawn")
+        for ((start, end) in curves) {
+            assertEquals(start.y < 50f, end.y < 50f, "the curve from $start to $end crosses the pad")
+        }
+    }
+
+    @Test
+    fun leavingThePad_drawsUpToTheLastPointInside() {
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        state.gestureStarted(Offset(10f, 50f))
+        listOf(Offset(30f, 55f), Offset(50f, 45f), Offset(70f, 50f), Offset(120f, 50f))
+            .forEach { state.gestureMoved(it) }
+
+        assertEquals(Offset(70f, 50f), state.lastCurveEnd())
+    }
+
+    @Test
+    fun clearDuringAStroke_dropsTheRestOfIt() {
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        state.gestureStarted(Offset(10f, 10f))
+        state.gestureMoved(Offset(20f, 20f))
+
+        state.clear()
+        listOf(Offset(30f, 30f), Offset(40f, 40f), Offset(50f, 50f), Offset(60f, 60f))
+            .forEach { state.gestureMoved(it) }
+        state.gestureEnded()
+
+        assertEquals(0, state.curveCount(), "ink drawn after clear() would not be reflected in signatureStarted")
+        assertFalse(state.signatureStarted.value)
+    }
+
     // toFloatList() stores a 3-float header, then 8 floats per curve: start, end, prev, next.
     private fun SignaturePadStateImpl.curveCount() = (toFloatList().size - 3) / 8
+
+    private fun SignaturePadStateImpl.curves(): List<Pair<Offset, Offset>> =
+        toFloatList().drop(3).chunked(8) { Offset(it[0], it[1]) to Offset(it[2], it[3]) }
 
     private fun SignaturePadStateImpl.lastCurveEnd(): Offset {
         val data = toFloatList()
