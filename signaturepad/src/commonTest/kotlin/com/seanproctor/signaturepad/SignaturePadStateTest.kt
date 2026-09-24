@@ -136,4 +136,42 @@ class SignaturePadStateTest {
         assertFalse(restored.signatureStarted.value)
         assertEquals(empty, restored.toFloatList())
     }
+
+    @Test
+    fun gestureEnded_drawsTheLastSegment() {
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        state.gestureStarted(Offset(10f, 50f))
+        state.gestureMoved(Offset(30f, 55f))
+        state.gestureMoved(Offset(50f, 45f))
+        state.gestureMoved(Offset(70f, 50f))
+        val curvesBefore = state.curveCount()
+
+        state.gestureEnded()
+
+        assertEquals(curvesBefore + 1, state.curveCount())
+        assertEquals(Offset(70f, 50f), state.lastCurveEnd(), "the stroke must reach where the finger lifted")
+    }
+
+    @Test
+    fun gestureEnded_drawsAShortStroke() {
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        // A drag that ends right after crossing the touch slop.
+        state.gestureStarted(Offset(10f, 10f))
+        state.gestureMoved(Offset(18f, 10f))
+
+        state.gestureEnded()
+
+        assertEquals(1, state.curveCount())
+        assertEquals(Offset(18f, 10f), state.lastCurveEnd())
+    }
+
+    // toFloatList() stores a 3-float header, then 8 floats per curve: start, end, prev, next.
+    private fun SignaturePadStateImpl.curveCount() = (toFloatList().size - 3) / 8
+
+    private fun SignaturePadStateImpl.lastCurveEnd(): Offset {
+        val data = toFloatList()
+        return Offset(data[data.size - 6], data[data.size - 5])
+    }
 }
