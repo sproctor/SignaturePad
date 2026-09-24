@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -36,6 +37,7 @@ public fun SignaturePad(
     val penWidthPx = with(LocalDensity.current) { penWidth.toPx() }
     Canvas(
         modifier = modifier
+            .clipToBounds()
             .onSizeChanged {
                 state.setSize(it.width, it.height)
             }
