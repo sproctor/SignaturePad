@@ -3,6 +3,7 @@ package com.seanproctor.signaturepad
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PointMode
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -46,6 +47,17 @@ internal class Bezier(
             // Ignore drawing exceptions
             // I think they happen when resetting canvas while we're drawing
         }
+    }
+
+    /**
+     * Adds this curve to [path]. The curve continues the path's current contour if that ends at
+     * [pathEnd] and this curve starts there; otherwise it starts a new one. Returns the new end of
+     * the path.
+     */
+    fun addTo(path: Path, pathEnd: Offset?): Offset {
+        if (startPoint != pathEnd) path.moveTo(startPoint.x, startPoint.y)
+        path.cubicTo(control1.x, control1.y, control2.x, control2.y, endPoint.x, endPoint.y)
+        return endPoint
     }
 
     private fun length(): Float {
@@ -134,6 +146,17 @@ internal class Bezier(
      * (start, end, prev, next). Used to serialize and rebuild the curve exactly.
      */
     fun sourcePoints(): List<Offset> = listOf(startPoint, endPoint, prevPoint, nextPoint)
+}
+
+/**
+ * Joins [curves] into a single path. Consecutive curves of a stroke share their end and start points,
+ * so each stroke becomes one contour.
+ */
+internal fun pathOf(curves: List<Bezier>): Path {
+    val path = Path()
+    var end: Offset? = null
+    curves.forEach { end = it.addTo(path, end) }
+    return path
 }
 
 private fun Float.whenNaN(then: () -> Float): Float =

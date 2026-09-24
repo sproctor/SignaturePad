@@ -21,6 +21,7 @@ plugins {
 }
 
 include(":androidDemo")
+include(":benchmark")
 include(":demo")
 include(":signaturepad")
 

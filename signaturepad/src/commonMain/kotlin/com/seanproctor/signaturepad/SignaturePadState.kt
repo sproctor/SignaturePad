@@ -10,7 +10,9 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import kotlin.math.min
 
 /**
@@ -142,10 +144,7 @@ public class SignaturePadStateImpl(
     }
 
     override fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float) {
-        val paint = penPaint(penColor, penWidth)
-        beziers.forEach {
-            it.draw(canvas, paint)
-        }
+        drawCurves(canvas, beziers, penPaint(penColor, penWidth))
     }
 
     override fun setSize(newWidth: Int, newHeight: Int) {
@@ -245,19 +244,26 @@ public class SignaturePadStateImpl(
         penWidth: Float,
     ) {
         val scaling = min(bitmap.width / width.toFloat(), bitmap.height / height.toFloat())
-        val canvas = Canvas(bitmap)
-        val paint = penPaint(penColor, penWidth)
-        beziers.forEach {
-            it.scale(scaling).draw(canvas, paint)
+        drawCurves(Canvas(bitmap), beziers.map { it.scale(scaling) }, penPaint(penColor, penWidth))
+    }
+
+    private fun drawCurves(canvas: Canvas, curves: List<Bezier>, paint: Paint) {
+        if (curves.isEmpty()) return
+        try {
+            canvas.drawPath(pathOf(curves), paint)
+        } catch (_: Throwable) {
+            // Ignore drawing exceptions
+            // I think they happen when resetting canvas while we're drawing
         }
     }
 
     private fun penPaint(color: Color, width: Float) = Paint().apply {
         this.color = color
+        style = PaintingStyle.Stroke
         strokeWidth = width
-        // Curves are drawn as runs of points. A round cap makes each point a dot instead of a square,
-        // so lines keep the same width in every direction.
+        // Round ends and corners, so strokes look like they were drawn with a round pen.
         strokeCap = StrokeCap.Round
+        strokeJoin = StrokeJoin.Round
     }
 
     private companion object {

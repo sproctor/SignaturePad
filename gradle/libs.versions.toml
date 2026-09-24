@@ -6,7 +6,9 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 vanniktech-maven-publish-base = { id = "com.vanniktech.maven.publish.base", version.ref = "vanniktech-maven" }
 
 [versions]
@@ -15,6 +17,7 @@ agp = "9.1.1"
 androidx-activity = "1.13.0"
 compose = "1.12.0"
 kotlin = "2.4.20"
+kotlinx-benchmark = "0.5.0"
 vanniktech-maven = "0.37.0"
 
 [libraries]
@@ -23,3 +26,4 @@ activity-compose = { group = "androidx.activity", name = "activity-compose", ver
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
 compose-material = { module = "org.jetbrains.compose.material:material", version.ref = "compose" }
 compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose" }
+kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinx-benchmark" }

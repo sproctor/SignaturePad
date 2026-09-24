@@ -13,16 +13,18 @@ Compose Signature Pad — a Kotlin Multiplatform signature capture library for C
 ./gradlew allTests           # Run tests for all targets
 ./gradlew check              # Run all checks including lint
 ./gradlew lintFix            # Run lint with auto-fix
+./gradlew :benchmark:benchmark  # Run JMH benchmarks (reports in benchmark/build/reports/benchmarks)
 ```
 
 Target-specific tasks follow Gradle KMP conventions (e.g., `jvmTest`, `compileKotlinJvm`).
 
 ## Architecture
 
-Three modules:
+Four modules:
 - **signaturepad** — the library, 100% common code (`src/commonMain/kotlin/com/seanproctor/signaturepad/`). Three files: `SignaturePad.kt` (composable), `SignaturePadState.kt` (state interface + impl), `Bezier.kt` (internal curve math). Uses `explicitApi()` mode.
 - **demo** — KMP demo app with JVM and JS targets. Platform entry points in `jvmMain` and `jsMain`, shared UI in `commonMain/SignatureBox.kt`.
 - **androidDemo** — Android demo app (standalone Android module, not KMP).
+- **benchmark** — JVM-only kotlinx-benchmark (JMH) suite for `SignaturePadStateImpl`: capturing, drawing, resizing and exporting a synthetic signature.
 
 ## Key Conventions
 
