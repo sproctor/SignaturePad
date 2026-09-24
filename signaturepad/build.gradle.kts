@@ -64,6 +64,7 @@ kotlin {
             dependencies {
                 // Provides the skiko native runtime so Paint()/Canvas can be exercised on the JVM.
                 implementation(compose.desktop.currentOs)
+                implementation(libs.compose.ui.test)
             }
         }
     }
