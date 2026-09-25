@@ -12,15 +12,15 @@ import kotlin.math.sqrt
 /**
  * One cubic segment of a stroke, running from [startPoint] to [endPoint]. [prevPoint] and [nextPoint]
  * are the neighbouring input points, used to smooth the joins between segments. [startsStroke] marks
- * the first segment of a stroke, so that drawing keeps separate strokes separate even when one begins
- * exactly where another ended.
+ * the first segment of a stroke. Drawing starts a new contour there and nowhere else, so separate
+ * strokes stay separate even when one begins exactly where another ended.
  */
 internal class Bezier(
     private val startPoint: Offset,
     private val endPoint: Offset,
     private val prevPoint: Offset,
     private val nextPoint: Offset,
-    val startsStroke: Boolean = false,
+    val startsStroke: Boolean,
 ) {
     private val control1 = calculateControlPoints(prevPoint, startPoint, endPoint).second
     private val control2 = calculateControlPoints(startPoint, endPoint, nextPoint).first
@@ -57,14 +57,12 @@ internal class Bezier(
     }
 
     /**
-     * Adds this curve to [path]. The curve continues the path's current contour if it doesn't start a
-     * stroke, the contour ends at [pathEnd] and this curve starts there; otherwise it starts a new
-     * one. Returns the new end of the path.
+     * Adds this curve to [path]. A curve that starts a stroke starts a new contour. Any other curve
+     * continues the current one, which ends where this curve starts.
      */
-    fun addTo(path: Path, pathEnd: Offset?): Offset {
-        if (startsStroke || startPoint != pathEnd) path.moveTo(startPoint.x, startPoint.y)
+    fun addTo(path: Path) {
+        if (startsStroke) path.moveTo(startPoint.x, startPoint.y)
         path.cubicTo(control1.x, control1.y, control2.x, control2.y, endPoint.x, endPoint.y)
-        return endPoint
     }
 
     private fun length(): Float {
@@ -157,13 +155,12 @@ internal class Bezier(
 }
 
 /**
- * Joins [curves] into a single path, with one contour per stroke. Consecutive curves of a stroke
- * share their end and start points, so each stroke is drawn as one continuous line.
+ * Joins [curves] into a single path, with one contour per stroke. The first curve must start a
+ * stroke, since a path's first contour needs a starting point.
  */
 internal fun pathOf(curves: List<Bezier>): Path {
     val path = Path()
-    var end: Offset? = null
-    curves.forEach { end = it.addTo(path, end) }
+    curves.forEach { it.addTo(path) }
     return path
 }
 

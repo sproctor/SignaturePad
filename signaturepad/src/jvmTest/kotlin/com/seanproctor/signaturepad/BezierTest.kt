@@ -20,6 +20,7 @@ class BezierTest {
             endPoint = end,
             prevPoint = Offset(-10f, 10f),
             nextPoint = Offset(50f, 10f),
+            startsStroke = true,
         )
 
         val points = bezier.record().allPoints
@@ -33,7 +34,7 @@ class BezierTest {
         // All four control points identical exercises the divide-by-zero path in the control-point
         // math; the whenNaN guard must keep the drawn coordinates finite and on the point.
         val p = Offset(5f, 5f)
-        val bezier = Bezier(startPoint = p, endPoint = p, prevPoint = p, nextPoint = p)
+        val bezier = Bezier(startPoint = p, endPoint = p, prevPoint = p, nextPoint = p, startsStroke = true)
 
         val points = bezier.record().allPoints
         points.forEach { assertApproxEquals(p, it) }
@@ -46,6 +47,7 @@ class BezierTest {
             endPoint = Offset(20f, 8f),
             prevPoint = Offset(0f, 0f),
             nextPoint = Offset(30f, 10f),
+            startsStroke = true,
         )
 
         val scaled = bezier.scale(2f)
