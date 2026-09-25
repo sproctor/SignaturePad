@@ -2,6 +2,7 @@ package com.seanproctor.signaturepad
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import kotlin.math.round
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -186,14 +187,55 @@ class SignaturePadStateTest {
     }
 
     @Test
-    fun leavingThePad_drawsUpToTheLastPointInside() {
+    fun leavingThePad_drawsUpToTheEdge() {
         val state = SignaturePadStateImpl()
         state.setSize(100, 100)
         state.gestureStarted(Offset(10f, 50f))
-        listOf(Offset(30f, 55f), Offset(50f, 45f), Offset(70f, 50f), Offset(120f, 50f))
+        listOf(Offset(30f, 55f), Offset(50f, 45f), Offset(70f, 50f), Offset(120f, 60f))
             .forEach { state.gestureMoved(it) }
 
-        assertEquals(Offset(70f, 50f), state.lastCurveEnd())
+        // The move from (70, 50) to (120, 60) crosses the right edge at (100, 56).
+        assertEquals(listOf(Offset(100f, 56f)), state.strokes().map { it.last() }.map { it.rounded() })
+    }
+
+    @Test
+    fun reenteringThePad_startsANewStrokeAtTheEdge() {
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        state.gestureStarted(Offset(50f, 50f))
+        // Out through the right edge at (100, 50), back in through it at (100, 20).
+        listOf(Offset(80f, 50f), Offset(120f, 50f), Offset(120f, 20f), Offset(80f, 20f), Offset(60f, 20f))
+            .forEach { state.gestureMoved(it) }
+        state.gestureEnded()
+
+        val strokes = state.strokes().map { stroke -> stroke.map { it.rounded() } }
+        assertEquals(2, strokes.size)
+        assertEquals(Offset(50f, 50f) to Offset(100f, 50f), strokes[0].first() to strokes[0].last())
+        assertEquals(Offset(100f, 20f) to Offset(60f, 20f), strokes[1].first() to strokes[1].last())
+    }
+
+    @Test
+    fun movingAcrossACornerOfThePad_drawsThePartOnThePad() {
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        // Neither point is on the pad, but the line between them cuts across its top-left corner.
+        state.gestureStarted(Offset(-10f, 20f))
+        state.gestureMoved(Offset(20f, -10f))
+        state.gestureEnded()
+
+        val strokes = state.strokes().map { stroke -> stroke.map { it.rounded() } }
+        assertEquals(listOf(Offset(0f, 10f) to Offset(10f, 0f)), strokes.map { it.first() to it.last() })
+    }
+
+    @Test
+    fun gestureThatStaysOffThePad_drawsNothing() {
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        state.gestureStarted(Offset(-10f, 20f))
+        listOf(Offset(-20f, 50f), Offset(-5f, 110f)).forEach { state.gestureMoved(it) }
+        state.gestureEnded()
+
+        assertEquals(0, state.curveCount())
     }
 
     @Test
@@ -218,6 +260,19 @@ class SignaturePadStateTest {
 
     private fun SignaturePadStateImpl.curves(): List<Pair<Offset, Offset>> =
         toFloatList().drop(3).chunked(9) { Offset(it[0], it[1]) to Offset(it[2], it[3]) }
+
+    // The points each stroke passes through: the start of its first curve, then each curve's end.
+    private fun SignaturePadStateImpl.strokes(): List<List<Offset>> {
+        val strokes = mutableListOf<MutableList<Offset>>()
+        toFloatList().drop(3).chunked(9).forEach {
+            if (it[8] != 0f) strokes.add(mutableListOf(Offset(it[0], it[1])))
+            strokes.last().add(Offset(it[2], it[3]))
+        }
+        return strokes
+    }
+
+    // Edge crossings are interpolated, so compare them to a tenth of a pixel.
+    private fun Offset.rounded() = Offset(round(x * 10) / 10, round(y * 10) / 10)
 
     private fun SignaturePadStateImpl.lastCurveEnd(): Offset {
         val data = toFloatList()
