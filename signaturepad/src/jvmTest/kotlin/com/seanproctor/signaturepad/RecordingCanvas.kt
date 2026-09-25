@@ -30,6 +30,9 @@ class RecordingCanvas : Canvas {
     /** Every recorded point, flattened. */
     val allPoints: List<Offset> get() = drawnStrokes.flatten()
 
+    /** The number of contours in the paths passed to [drawPath]: one per `moveTo`. */
+    var contourCount: Int = 0
+
     /** The paint passed to the most recent recorded call. */
     var lastPaint: Paint? = null
 
@@ -75,6 +78,7 @@ class RecordingCanvas : Canvas {
 
     override fun drawPath(path: Path, paint: Paint) {
         for (segment in path) {
+            if (segment.type == PathSegment.Type.Move) contourCount++
             if (segment.type == PathSegment.Type.Cubic) {
                 drawnStrokes.add(sampleCubic(segment.points))
             }

@@ -71,6 +71,11 @@ public class SignaturePadStateImpl(
     // instead of drawing on the emptied pad.
     private var gestureActive = false
     private val beziers = mutableStateListOf<Bezier>()
+
+    // Whether the next curve starts a new stroke. It does after a gesture starts, and after anything
+    // else that discards the points of the stroke in progress.
+    private var nextCurveStartsStroke = true
+
     private var width: Int = 0
     private var height: Int = 0
 
@@ -88,7 +93,7 @@ public class SignaturePadStateImpl(
         _signatureStarted.value = true
         gestureActive = true
         // Reset state
-        points.clear()
+        resetStroke()
         addPoint(point)
     }
 
@@ -120,8 +125,9 @@ public class SignaturePadStateImpl(
             // gradually changes to the stroke width just calculated. The new
             // width calculation is based on the velocity between the Bezier's
             // start and end points.
-            val bezier = Bezier(startPoint, endPoint, prevPoint, nextPoint)
+            val bezier = Bezier(startPoint, endPoint, prevPoint, nextPoint, nextCurveStartsStroke)
             beziers.add(bezier)
+            nextCurveStartsStroke = false
 
             // Remove the first point
             points.removeAt(0)
@@ -138,9 +144,14 @@ public class SignaturePadStateImpl(
         // end point standing in for the next one, the same way the first segment reuses its start.
         if (points.size >= 3) {
             val (prevPoint, startPoint, endPoint) = points.takeLast(3)
-            beziers.add(Bezier(startPoint, endPoint, prevPoint, endPoint))
+            beziers.add(Bezier(startPoint, endPoint, prevPoint, endPoint, nextCurveStartsStroke))
         }
+        resetStroke()
+    }
+
+    private fun resetStroke() {
         points.clear()
+        nextCurveStartsStroke = true
     }
 
     override fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float) {
@@ -165,7 +176,7 @@ public class SignaturePadStateImpl(
             return
         }
 
-        points.clear()
+        resetStroke()
 
         if (beziers.size != remappedCount) {
             remapSource = beziers.toList()
@@ -183,7 +194,7 @@ public class SignaturePadStateImpl(
     override fun clear() {
         _signatureStarted.value = false
         gestureActive = false
-        points.clear()
+        resetStroke()
         beziers.clear()
         resetRemapSource()
     }
@@ -195,7 +206,8 @@ public class SignaturePadStateImpl(
 
     /**
      * Flattens the captured signature to a list of floats for [rememberSaveable]: the pad size the
-     * curves belong to, the started flag, then each curve's four source points as `x, y` pairs.
+     * curves belong to, the started flag, then for each curve its four source points as `x, y` pairs
+     * followed by whether it starts a stroke.
      */
     internal fun toFloatList(): List<Float> {
         // Save the remap source while it's still current, so that resizing after a restore (the
@@ -211,6 +223,7 @@ public class SignaturePadStateImpl(
                 data.add(point.x)
                 data.add(point.y)
             }
+            data.add(if (bezier.startsStroke) 1f else 0f)
         }
         return data
     }
@@ -221,7 +234,7 @@ public class SignaturePadStateImpl(
         width = data[0].toInt()
         height = data[1].toInt()
         _signatureStarted.value = data[2] != 0f
-        points.clear()
+        resetStroke()
         beziers.clear()
         resetRemapSource()
         var i = SAVE_HEADER_SIZE
@@ -232,6 +245,7 @@ public class SignaturePadStateImpl(
                     endPoint = Offset(data[i + 2], data[i + 3]),
                     prevPoint = Offset(data[i + 4], data[i + 5]),
                     nextPoint = Offset(data[i + 6], data[i + 7]),
+                    startsStroke = data[i + 8] != 0f,
                 )
             )
             i += FLOATS_PER_BEZIER
@@ -270,8 +284,8 @@ public class SignaturePadStateImpl(
         // width, height, signatureStarted
         const val SAVE_HEADER_SIZE = 3
 
-        // four source points, each an (x, y) pair
-        const val FLOATS_PER_BEZIER = 8
+        // four source points, each an (x, y) pair, then whether the curve starts a stroke
+        const val FLOATS_PER_BEZIER = 9
     }
 }
 
