@@ -76,6 +76,11 @@ public class SignaturePadStateImpl(
     // else that discards the points of the stroke in progress.
     private var nextCurveStartsStroke = true
 
+    // The gesture's last point, on the pad or off it. Each move is drawn as the line from here, so
+    // a stroke can end and start exactly where that line crosses the pad's edge. Null when there is
+    // nothing to draw from.
+    private var lastGesturePoint: Offset? = null
+
     private var width: Int = 0
     private var height: Int = 0
 
@@ -94,20 +99,62 @@ public class SignaturePadStateImpl(
         gestureActive = true
         // Reset state
         resetStroke()
-        addPoint(point)
+        dragTo(point)
     }
 
     override fun gestureMoved(point: Offset) {
-        if (gestureActive) addPoint(point)
+        if (gestureActive) dragTo(point)
+    }
+
+    private fun dragTo(point: Offset) {
+        // Only the part of the move that's on the pad is drawn. Leaving the pad ends the stroke at
+        // the edge, and coming back in starts a new one at the edge, rather than drawing a line
+        // across the pad from where the finger left.
+        val onPad = clipToPad(lastGesturePoint ?: point, point)
+        if (onPad != null) {
+            val (entry, exit) = onPad
+            addPoint(entry)
+            addPoint(exit)
+            if (exit != point) finishStroke()
+        }
+        lastGesturePoint = point
+    }
+
+    /**
+     * The part of the line from [from] to [to] that's on the pad, as the points where it enters and
+     * leaves, or null if the line misses the pad. An end that's already on the pad is returned as is.
+     */
+    private fun clipToPad(from: Offset, to: Offset): Pair<Offset, Offset>? {
+        val dx = to.x - from.x
+        val dy = to.y - from.y
+        // Liang–Barsky: the line is from + t·(dx, dy) for t in 0..1, and each edge limits t with
+        // p·t <= q. Edges it runs towards the inside of raise the lower limit, and the rest lower
+        // the upper one.
+        var enter = 0f
+        var leave = 1f
+        fun limit(p: Float, q: Float): Boolean {
+            if (p == 0f) return q >= 0f
+            val t = q / p
+            if (p < 0f) enter = maxOf(enter, t) else leave = minOf(leave, t)
+            return enter <= leave
+        }
+        if (!limit(-dx, from.x) || !limit(dx, width - from.x) ||
+            !limit(-dy, from.y) || !limit(dy, height - from.y)
+        ) {
+            return null
+        }
+        // Rounding can leave an interpolated point a hair off the pad, so clamp it back on.
+        fun at(t: Float) = Offset(
+            (from.x + dx * t).coerceIn(0f, width.toFloat()),
+            (from.y + dy * t).coerceIn(0f, height.toFloat()),
+        )
+        return Pair(if (enter == 0f) from else at(enter), if (leave == 1f) to else at(leave))
     }
 
     private fun addPoint(point: Offset) {
-        // Leaving the pad ends the stroke, so coming back in starts a new one rather than drawing a
-        // line across the pad from where the finger left.
-        if (point.x < 0 || point.x > width || point.y < 0 || point.y > height) {
-            finishStroke()
-            return
-        }
+        // Moves that don't go anywhere add nothing to the stroke. This also skips the entry point of
+        // a move that carries on a stroke, since that's the point the stroke already ends at.
+        if (points.lastOrNull() == point) return
 
         // A stroke's first point goes in twice so that its first segment gets drawn.
         if (points.isEmpty()) points.add(point)
@@ -156,6 +203,7 @@ public class SignaturePadStateImpl(
     private fun resetStroke() {
         points.clear()
         nextCurveStartsStroke = true
+        lastGesturePoint = null
     }
 
     override fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float) {
