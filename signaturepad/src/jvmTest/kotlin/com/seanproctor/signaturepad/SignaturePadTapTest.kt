@@ -5,7 +5,8 @@ import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -40,12 +41,21 @@ class SignaturePadTapTest {
     }
 
     @Test
-    fun zeroLengthCurve_isDrawnAsADot() {
-        val canvas = RecordingCanvas()
+    fun dot_isRenderedAsARoundMark() {
+        // A dot is a zero-length curve in the path. RecordingCanvas can't show whether that renders,
+        // so draw it for real and check it leaves a mark the width of the pen.
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        state.gestureStarted(Offset(40f, 60f))
+        state.gestureEnded()
 
-        Bezier(Offset.Zero, Offset.Zero, Offset.Zero, Offset.Zero, startsStroke = true).draw(canvas, Paint())
+        val bitmap = ImageBitmap(100, 100)
+        state.drawOnBitmap(bitmap, Color.Black, 6f)
 
-        assertEquals(listOf(listOf(Offset.Zero)), canvas.drawnStrokes)
+        val pixels = bitmap.toPixelMap()
+        assertTrue(pixels[40, 60].alpha > 0.5f, "no ink at the dot's center")
+        assertTrue(pixels[42, 60].alpha > 0.5f, "no ink within the pen's radius")
+        assertEquals(0f, pixels[45, 60].alpha, "ink beyond the pen's radius")
     }
 
     @Test

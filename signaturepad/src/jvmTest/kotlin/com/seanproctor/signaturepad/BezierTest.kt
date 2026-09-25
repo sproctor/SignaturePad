@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 class BezierTest {
 
     private fun Bezier.record(): RecordingCanvas =
-        RecordingCanvas().also { draw(it, Paint()) }
+        RecordingCanvas().also { it.drawPath(pathOf(listOf(this)), Paint()) }
 
     @Test
     fun draw_startsAtStartPointAndEndsAtEndPoint() {

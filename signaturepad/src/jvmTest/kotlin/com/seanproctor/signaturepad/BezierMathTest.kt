@@ -10,17 +10,17 @@ import kotlin.test.assertTrue
 /**
  * Validates the curve math in [Bezier] against an independent reference.
  *
- * [Bezier.draw] samples the curve uniformly in `t` from 0 to 1 (`t = i / drawSteps`), so for a
- * stroke of `n` drawn points the i-th point is the curve evaluated at `t = i / (n - 1)`. That lets
- * us re-derive every expected coordinate from the textbook cubic-bezier formula without depending
- * on the library's internal control points or arc-length sampling.
+ * [RecordingCanvas] samples each cubic in a drawn path uniformly in `t` from 0 to 1, so for a curve
+ * of `n` recorded points the i-th point is the curve evaluated at `t = i / (n - 1)`. That lets us
+ * re-derive every expected coordinate from the textbook cubic-bezier formula without depending on
+ * the library's internal control points.
  */
 class BezierMathTest {
 
     private val tolerance = 0.05f
 
     private fun drawnPoints(bezier: Bezier): List<Offset> =
-        RecordingCanvas().also { bezier.draw(it, Paint()) }.allPoints
+        RecordingCanvas().also { it.drawPath(pathOf(listOf(bezier)), Paint()) }.allPoints
 
     // --- Independent reference implementations (derived from the math, not the production code) ---
 
