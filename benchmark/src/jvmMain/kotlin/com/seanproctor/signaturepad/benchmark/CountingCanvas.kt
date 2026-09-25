@@ -1,4 +1,4 @@
-package com.seanproctor.signaturepad
+package com.seanproctor.signaturepad.benchmark
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -9,36 +9,26 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathSegment
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.Vertices
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 
 /**
- * A [Canvas] that records every [drawPoints] and [drawPath] call instead of rendering, so tests can
- * assert on what a [SignaturePadState] emits without depending on a real rendering backend. All
- * other canvas operations are no-ops.
+ * A [Canvas] that only counts the points and paths it's asked to draw. Drawing to it measures the
+ * work a [com.seanproctor.signaturepad.SignaturePadState] does to produce a frame, without the cost
+ * of rendering it.
  */
-class RecordingCanvas : Canvas {
-    /**
-     * One entry per [drawPoints] call, holding the points that were passed, and one per cubic curve
-     * in a [drawPath] call, holding points sampled along it.
-     */
-    val drawnStrokes: MutableList<List<Offset>> = mutableListOf()
-
-    /** Every recorded point, flattened. */
-    val allPoints: List<Offset> get() = drawnStrokes.flatten()
-
-    /** The number of contours in the paths passed to [drawPath]: one per `moveTo`. */
-    var contourCount: Int = 0
-
-    /** The paint passed to the most recent recorded call. */
-    var lastPaint: Paint? = null
+class CountingCanvas : Canvas {
+    var pointCount: Long = 0
+    var pathCount: Long = 0
 
     override fun drawPoints(pointMode: PointMode, points: List<Offset>, paint: Paint) {
-        drawnStrokes.add(points.toList())
-        lastPaint = paint
+        pointCount += points.size
+    }
+
+    override fun drawRawPoints(pointMode: PointMode, points: FloatArray, paint: Paint) {
+        pointCount += points.size / 2
     }
 
     override fun save() {}
@@ -77,28 +67,9 @@ class RecordingCanvas : Canvas {
     ) {}
 
     override fun drawPath(path: Path, paint: Paint) {
-        for (segment in path) {
-            if (segment.type == PathSegment.Type.Move) contourCount++
-            if (segment.type == PathSegment.Type.Cubic) {
-                drawnStrokes.add(sampleCubic(segment.points))
-            }
-        }
-        lastPaint = paint
+        pathCount++
     }
 
-    // Samples the cubic curve with the given start, control and end points (as x, y pairs).
-    private fun sampleCubic(p: FloatArray): List<Offset> = List(CURVE_SAMPLES + 1) { i ->
-        val t = i.toFloat() / CURVE_SAMPLES
-        val u = 1 - t
-        val a = u * u * u
-        val b = 3 * u * u * t
-        val c = 3 * u * t * t
-        val d = t * t * t
-        Offset(
-            a * p[0] + b * p[2] + c * p[4] + d * p[6],
-            a * p[1] + b * p[3] + c * p[5] + d * p[7],
-        )
-    }
     override fun drawImage(image: ImageBitmap, topLeftOffset: Offset, paint: Paint) {}
     override fun drawImageRect(
         image: ImageBitmap,
@@ -109,10 +80,7 @@ class RecordingCanvas : Canvas {
         paint: Paint,
     ) {}
 
-    override fun drawRawPoints(pointMode: PointMode, points: FloatArray, paint: Paint) {}
     override fun drawVertices(vertices: Vertices, blendMode: BlendMode, paint: Paint) {}
     override fun enableZ() {}
     override fun disableZ() {}
 }
-
-private const val CURVE_SAMPLES = 16

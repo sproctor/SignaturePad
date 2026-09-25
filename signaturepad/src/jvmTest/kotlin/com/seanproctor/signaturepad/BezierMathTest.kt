@@ -10,17 +10,17 @@ import kotlin.test.assertTrue
 /**
  * Validates the curve math in [Bezier] against an independent reference.
  *
- * [Bezier.draw] samples the curve uniformly in `t` from 0 to 1 (`t = i / drawSteps`), so for a
- * stroke of `n` drawn points the i-th point is the curve evaluated at `t = i / (n - 1)`. That lets
- * us re-derive every expected coordinate from the textbook cubic-bezier formula without depending
- * on the library's internal control points or arc-length sampling.
+ * [RecordingCanvas] samples each cubic in a drawn path uniformly in `t` from 0 to 1, so for a curve
+ * of `n` recorded points the i-th point is the curve evaluated at `t = i / (n - 1)`. That lets us
+ * re-derive every expected coordinate from the textbook cubic-bezier formula without depending on
+ * the library's internal control points.
  */
 class BezierMathTest {
 
     private val tolerance = 0.05f
 
     private fun drawnPoints(bezier: Bezier): List<Offset> =
-        RecordingCanvas().also { bezier.draw(it, Paint()) }.allPoints
+        RecordingCanvas().also { it.drawPath(pathOf(listOf(bezier)), Paint()) }.allPoints
 
     // --- Independent reference implementations (derived from the math, not the production code) ---
 
@@ -75,7 +75,7 @@ class BezierMathTest {
         for (case in cases) {
             val (start, end, prev, next) = case
             val (c1, c2) = expectedControls(start, end, prev, next)
-            val points = drawnPoints(Bezier(start, end, prev, next))
+            val points = drawnPoints(Bezier(start, end, prev, next, startsStroke = true))
 
             assertTrue(points.size >= 2, "expected a sampled curve for $start -> $end")
             val last = points.size - 1
@@ -97,6 +97,7 @@ class BezierMathTest {
                 endPoint = Offset(20f, 0f),
                 prevPoint = Offset(0f, 0f),
                 nextPoint = Offset(30f, 0f),
+                startsStroke = true,
             ),
         )
 
@@ -121,6 +122,7 @@ class BezierMathTest {
                 endPoint = Offset(20f, 0f),
                 prevPoint = Offset(0f, 0f),
                 nextPoint = Offset(30f, 0f),
+                startsStroke = true,
             ),
         )
         // The straight segment is symmetric, so the geometric midpoint of the samples is B(0.5).
@@ -151,7 +153,7 @@ class BezierMathTest {
         val minX = xs.min(); val maxX = xs.max()
         val minY = ys.min(); val maxY = ys.max()
 
-        for (p in drawnPoints(Bezier(start, end, prev, next))) {
+        for (p in drawnPoints(Bezier(start, end, prev, next, startsStroke = true))) {
             assertTrue(p.x in (minX - tolerance)..(maxX + tolerance), "x ${p.x} outside [$minX,$maxX]")
             assertTrue(p.y in (minY - tolerance)..(maxY + tolerance), "y ${p.y} outside [$minY,$maxY]")
         }

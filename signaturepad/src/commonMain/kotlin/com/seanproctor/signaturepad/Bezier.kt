@@ -1,86 +1,32 @@
 package com.seanproctor.signaturepad
 
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Canvas
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.PointMode
-import kotlin.math.ceil
-import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.Path
 import kotlin.math.sqrt
 
+/**
+ * One cubic segment of a stroke, running from [startPoint] to [endPoint]. [prevPoint] and [nextPoint]
+ * are the neighboring input points, used to smooth the joins between segments. [startsStroke] marks
+ * the first segment of a stroke. Drawing starts a new contour there and nowhere else, so separate
+ * strokes stay separate even when one begins exactly where another ended.
+ */
 internal class Bezier(
     private val startPoint: Offset,
     private val endPoint: Offset,
     private val prevPoint: Offset,
     private val nextPoint: Offset,
+    val startsStroke: Boolean,
 ) {
     private val control1 = calculateControlPoints(prevPoint, startPoint, endPoint).second
     private val control2 = calculateControlPoints(startPoint, endPoint, nextPoint).first
-    private val drawSteps = ceil(length()).roundToInt()
 
-    fun draw(canvas: Canvas, paint: Paint) {
-        val points = mutableListOf<Offset>()
-        repeat(drawSteps + 1) { i ->
-            // A zero-length curve (a tap) gets a single point at its start, which draws as a dot.
-            val t = if (drawSteps == 0) 0f else i.toFloat() / drawSteps
-            val tt = t * t
-            val ttt = tt * t
-            val u = 1 - t
-            val uu = u * u
-            val uuu = uu * u
-
-            val x = uuu * startPoint.x +
-                    3 * uu * t * control1.x +
-                    3 * u * tt * control2.x +
-                    ttt * endPoint.x
-            val y = uuu * startPoint.y +
-                    3 * uu * t * control1.y +
-                    3 * u * tt * control2.y +
-                    ttt * endPoint.y
-
-            points.add(Offset(x, y))
-        }
-        try {
-            canvas.drawPoints(points = points, pointMode = PointMode.Points, paint = paint)
-        } catch (_: Throwable) {
-            // Ignore drawing exceptions
-            // I think they happen when resetting canvas while we're drawing
-        }
-    }
-
-    private fun length(): Float {
-        val steps = 10
-        var length = 0f
-        var px = 0f
-        var py = 0f
-        repeat(steps + 1) { i ->
-            val t = i.toFloat() / steps
-            val cx = point(
-                t, startPoint.x, control1.x,
-                control2.x, endPoint.x
-            )
-            val cy = point(
-                t, startPoint.y, control1.y,
-                control2.y, endPoint.y
-            )
-            if (i > 0) {
-                val xDiff = cx - px
-                val yDiff = cy - py
-                length += sqrt(xDiff * xDiff + yDiff * yDiff)
-            }
-            px = cx
-            py = cy
-        }
-        return length
-    }
-
-    private fun point(t: Float, start: Float, c1: Float, c2: Float, end: Float): Float {
-        return (
-                start * (1.0f - t) * (1.0f - t) * (1.0f - t)
-                        + 3.0f * c1 * (1.0f - t) * (1.0f - t) * t
-                        + 3.0f * c2 * (1.0f - t) * t * t
-                        + end * t * t * t
-                )
+    /**
+     * Adds this curve to [path]. A curve that starts a stroke starts a new contour. Any other curve
+     * continues the current one, which ends where this curve starts.
+     */
+    fun addTo(path: Path) {
+        if (startsStroke) path.moveTo(startPoint.x, startPoint.y)
+        path.cubicTo(control1.x, control1.y, control2.x, control2.y, endPoint.x, endPoint.y)
     }
 
     private fun calculateControlPoints(
@@ -124,6 +70,7 @@ internal class Bezier(
             endPoint = transform(endPoint),
             prevPoint = transform(prevPoint),
             nextPoint = transform(nextPoint),
+            startsStroke = startsStroke,
         )
     }
 
@@ -134,6 +81,16 @@ internal class Bezier(
      * (start, end, prev, next). Used to serialize and rebuild the curve exactly.
      */
     fun sourcePoints(): List<Offset> = listOf(startPoint, endPoint, prevPoint, nextPoint)
+}
+
+/**
+ * Joins [curves] into a single path, with one contour per stroke. The first curve must start a
+ * stroke, since a path's first contour needs a starting point.
+ */
+internal fun pathOf(curves: List<Bezier>): Path {
+    val path = Path()
+    curves.forEach { it.addTo(path) }
+    return path
 }
 
 private fun Float.whenNaN(then: () -> Float): Float =

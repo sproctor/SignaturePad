@@ -212,14 +212,15 @@ class SignaturePadStateTest {
         assertFalse(state.signatureStarted.value)
     }
 
-    // toFloatList() stores a 3-float header, then 8 floats per curve: start, end, prev, next.
-    private fun SignaturePadStateImpl.curveCount() = (toFloatList().size - 3) / 8
+    // toFloatList() stores a 3-float header, then 9 floats per curve: start, end, prev, next, and
+    // whether it starts a stroke.
+    private fun SignaturePadStateImpl.curveCount() = (toFloatList().size - 3) / 9
 
     private fun SignaturePadStateImpl.curves(): List<Pair<Offset, Offset>> =
-        toFloatList().drop(3).chunked(8) { Offset(it[0], it[1]) to Offset(it[2], it[3]) }
+        toFloatList().drop(3).chunked(9) { Offset(it[0], it[1]) to Offset(it[2], it[3]) }
 
     private fun SignaturePadStateImpl.lastCurveEnd(): Offset {
         val data = toFloatList()
-        return Offset(data[data.size - 6], data[data.size - 5])
+        return Offset(data[data.size - 7], data[data.size - 6])
     }
 }
