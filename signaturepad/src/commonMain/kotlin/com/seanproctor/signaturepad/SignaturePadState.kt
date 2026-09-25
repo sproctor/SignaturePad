@@ -168,10 +168,6 @@ public class SignaturePadStateImpl(
             val endPoint = points[2]
             val nextPoint = points[3]
 
-            // The Bezier's width starts out as the last curve's final width, and
-            // gradually changes to the stroke width just calculated. The new
-            // width calculation is based on the velocity between the Bezier's
-            // start and end points.
             val bezier = Bezier(startPoint, endPoint, prevPoint, nextPoint, nextCurveStartsStroke)
             beziers.add(bezier)
             nextCurveStartsStroke = false
@@ -341,8 +337,8 @@ public class SignaturePadStateImpl(
  * [rememberSaveable]. The captured signature is preserved; [resizeBehavior] is supplied here rather
  * than saved, because it may hold a non-serializable lambda ([ResizeBehavior.Custom]).
  *
- * Most callers can rely on [rememberSignaturePadState], which already saves through this. Use this
- * directly only when managing the state with your own [rememberSaveable] call.
+ * Most callers can rely on [rememberSaveableSignaturePadState], which already saves through this.
+ * Use this directly only when managing the state with your own [rememberSaveable] call.
  */
 public fun SignaturePadStateSaver(
     resizeBehavior: ResizeBehavior = ResizeBehavior.Clear,
