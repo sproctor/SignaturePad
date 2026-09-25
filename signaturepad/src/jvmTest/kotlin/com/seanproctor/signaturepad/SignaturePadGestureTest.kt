@@ -56,6 +56,78 @@ class SignaturePadGestureTest {
     }
 
     @Test
+    fun liftingTheFirstFingerWhileASecondIsDown_doesNotDrawOverToIt() = runComposeUiTest {
+        val state = SignaturePadStateImpl()
+        setContent {
+            SignaturePad(state, Color.Black, 3.dp, Modifier.size(200.dp).testTag("pad"))
+        }
+
+        onNodeWithTag("pad").performTouchInput {
+            down(0, Offset(20f, 100f))
+            moveTo(0, Offset(60f, 100f))
+            moveTo(0, Offset(100f, 100f))
+            // A second finger (or a palm) lands, then the first one lifts.
+            down(1, Offset(160f, 180f))
+            up(0)
+            moveTo(1, Offset(170f, 180f))
+            moveTo(1, Offset(180f, 180f))
+            // The second finger also moves in its up event.
+            updatePointerTo(1, Offset(190f, 180f))
+            up(1)
+        }
+        waitForIdle()
+
+        val ink = RecordingCanvas().also { state.drawSignature(it, Color.Black, 3f) }.allPoints
+        assertEquals(100f, ink.maxOf { it.x }, 0.5f, "the first finger's stroke doesn't end where it lifted")
+        assertEquals(100f, ink.maxOf { it.y }, 0.5f, "a line was drawn over to the second finger")
+    }
+
+    @Test
+    fun secondFingerLiftingWithoutMoving_finishesTheFirstFingersStroke() = runComposeUiTest {
+        val state = SignaturePadStateImpl()
+        setContent {
+            SignaturePad(state, Color.Black, 3.dp, Modifier.size(200.dp).testTag("pad"))
+        }
+
+        onNodeWithTag("pad").performTouchInput {
+            down(0, Offset(20f, 100f))
+            moveTo(0, Offset(60f, 100f))
+            moveTo(0, Offset(100f, 100f))
+            down(1, Offset(160f, 180f))
+            up(0)
+            // The drag ends on the second finger's up, with no move from it in between.
+            up(1)
+        }
+        waitForIdle()
+
+        val ink = RecordingCanvas().also { state.drawSignature(it, Color.Black, 3f) }.allPoints
+        assertEquals(100f, ink.maxOf { it.x }, 0.5f, "the first finger's last segment is missing")
+    }
+
+    @Test
+    fun dragStartedByASecondFingerAfterTheFirstLifted_drawsNothing() = runComposeUiTest {
+        val state = SignaturePadStateImpl()
+        setContent {
+            SignaturePad(state, Color.Black, 3.dp, Modifier.size(200.dp).testTag("pad"))
+        }
+
+        onNodeWithTag("pad").performTouchInput {
+            // The first finger lifts before moving far enough to start a drag, and the second one
+            // starts it instead.
+            down(0, Offset(20f, 100f))
+            down(1, Offset(100f, 150f))
+            up(0)
+            moveTo(1, Offset(140f, 150f))
+            moveTo(1, Offset(180f, 150f))
+            up(1)
+        }
+        waitForIdle()
+
+        val ink = RecordingCanvas().also { state.drawSignature(it, Color.Black, 3f) }.allPoints
+        assertEquals(emptyList(), ink, "a stroke was drawn for a drag the first finger didn't make")
+    }
+
+    @Test
     fun disablingThePadMidStroke_keepsTheStrokeSoFar() = runComposeUiTest {
         val state = SignaturePadStateImpl()
         var enabled by mutableStateOf(true)

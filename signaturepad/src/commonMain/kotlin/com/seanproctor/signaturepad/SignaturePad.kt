@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -67,15 +68,29 @@ public fun SignaturePad(
             }
             .pointerInput(state, enabled) {
                 if (enabled) {
+                    // The finger drawing the stroke. If it lifts while another finger is down, the
+                    // drag carries on with that finger, which shouldn't draw.
+                    var strokePointer: PointerId? = null
                     try {
                         detectDragGestures(
                             orientationLock = null,
                             // Start where the finger went down rather than where it crossed the
                             // touch slop, so the beginning of the stroke isn't cut off.
-                            onDragStart = { down, _, _ ->
-                                state.gestureStarted(down.position)
+                            onDragStart = { down, slopChange, _ ->
+                                // If that finger lifted before the drag started and another one
+                                // started it instead, there's no stroke to draw.
+                                if (slopChange.id == down.id) {
+                                    strokePointer = down.id
+                                    state.gestureStarted(down.position)
+                                } else {
+                                    strokePointer = null
+                                }
                             },
                             onDragEnd = { up ->
+                                if (up.id != strokePointer) {
+                                    if (strokePointer != null) state.gestureEnded()
+                                    return@detectDragGestures
+                                }
                                 // The up event isn't passed to onDrag, but it can still carry the
                                 // last bit of movement.
                                 up.historical.forEach { state.gestureMoved(it.position) }
@@ -86,6 +101,13 @@ public fun SignaturePad(
                             },
                             onDragCancel = { state.gestureEnded() },
                             onDrag = { change: PointerInputChange, _: Offset ->
+                                // Another finger took over, so end the stroke rather than draw a
+                                // line over to it, and ignore the rest of the drag.
+                                if (change.id != strokePointer) {
+                                    if (strokePointer != null) state.gestureEnded()
+                                    strokePointer = null
+                                    return@detectDragGestures
+                                }
                                 val point = Offset(
                                     change.position.x,
                                     change.position.y,
