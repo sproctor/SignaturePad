@@ -25,3 +25,6 @@ jobs:
 
       - name: Run tests
         run: ./gradlew :signaturepad:allTests
+
+      - name: Check that the demos compile
+        run: ./gradlew :androidDemo:assembleDebug :demo:compileKotlinJvm :demo:compileKotlinJs
