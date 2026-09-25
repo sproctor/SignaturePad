@@ -267,12 +267,7 @@ public class SignaturePadStateImpl(
 
     private fun drawCurves(canvas: Canvas, curves: List<Bezier>, paint: Paint) {
         if (curves.isEmpty()) return
-        try {
-            canvas.drawPath(pathOf(curves), paint)
-        } catch (_: Throwable) {
-            // Ignore drawing exceptions
-            // I think they happen when resetting canvas while we're drawing
-        }
+        canvas.drawPath(pathOf(curves), paint)
     }
 
     private fun penPaint(color: Color, width: Float) = Paint().apply {
