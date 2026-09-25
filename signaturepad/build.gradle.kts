@@ -52,7 +52,8 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(libs.compose.foundation)
+                // The public API takes and returns Compose types, so apps compile against them too.
+                api(libs.compose.foundation)
             }
         }
         commonTest {
