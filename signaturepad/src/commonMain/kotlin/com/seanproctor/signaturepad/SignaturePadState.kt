@@ -65,6 +65,9 @@ public class SignaturePadStateImpl(
     private val _signatureStarted = mutableStateOf(false)
     override val signatureStarted: State<Boolean> = _signatureStarted
     private val points = mutableListOf<Offset>()
+    // Cleared when the gesture ends, or when clear() cuts a stroke short, so later moves are ignored
+    // instead of drawing on the emptied pad.
+    private var gestureActive = false
     private val beziers = mutableStateListOf<Bezier>()
     private var width: Int = 0
     private var height: Int = 0
@@ -81,22 +84,26 @@ public class SignaturePadStateImpl(
 
     override fun gestureStarted(point: Offset) {
         _signatureStarted.value = true
+        gestureActive = true
         // Reset state
         points.clear()
-        // First segment isn't drawn
-        addPoint(point)
         addPoint(point)
     }
 
     override fun gestureMoved(point: Offset) {
-        addPoint(point)
+        if (gestureActive) addPoint(point)
     }
 
     private fun addPoint(point: Offset) {
-        // Don't add points outside the bounds
-        if (point.x < 0 || point.x > width || point.y < 0 || point.y > height)
+        // Leaving the pad ends the stroke, so coming back in starts a new one rather than drawing a
+        // line across the pad from where the finger left.
+        if (point.x < 0 || point.x > width || point.y < 0 || point.y > height) {
+            finishStroke()
             return
+        }
 
+        // A stroke's first point goes in twice so that its first segment gets drawn.
+        if (points.isEmpty()) points.add(point)
         points.add(point)
 
         // Need 4 points to draw a cubic bezier curve.
@@ -120,6 +127,11 @@ public class SignaturePadStateImpl(
     }
 
     override fun gestureEnded() {
+        gestureActive = false
+        finishStroke()
+    }
+
+    private fun finishStroke() {
         // The last segment is still waiting for a next point that won't come. Draw it with its own
         // end point standing in for the next one, the same way the first segment reuses its start.
         if (points.size >= 3) {
@@ -171,6 +183,7 @@ public class SignaturePadStateImpl(
 
     override fun clear() {
         _signatureStarted.value = false
+        gestureActive = false
         points.clear()
         beziers.clear()
         resetRemapSource()

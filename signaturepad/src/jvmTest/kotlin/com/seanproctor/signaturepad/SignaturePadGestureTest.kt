@@ -1,6 +1,9 @@
 package com.seanproctor.signaturepad
 
 import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -50,5 +53,28 @@ class SignaturePadGestureTest {
 
         val ink = RecordingCanvas().also { state.drawSignature(it, Color.Black, 3f) }.allPoints
         assertEquals(180f, ink.maxOf { it.x }, 0.5f, "the movement in the up event is missing")
+    }
+
+    @Test
+    fun disablingThePadMidStroke_keepsTheStrokeSoFar() = runComposeUiTest {
+        val state = SignaturePadStateImpl()
+        var enabled by mutableStateOf(true)
+        setContent {
+            SignaturePad(state, Color.Black, 3.dp, Modifier.size(200.dp).testTag("pad"), enabled = enabled)
+        }
+        onNodeWithTag("pad").performTouchInput {
+            down(Offset(20f, 100f))
+            moveTo(Offset(60f, 100f))
+            moveTo(Offset(100f, 100f))
+            moveTo(Offset(140f, 100f))
+        }
+        waitForIdle()
+
+        // Restarts pointer input while the finger is still down.
+        enabled = false
+        waitForIdle()
+
+        val ink = RecordingCanvas().also { state.drawSignature(it, Color.Black, 3f) }.allPoints
+        assertEquals(140f, ink.maxOf { it.x }, 0.5f, "the last segment before disabling is missing")
     }
 }
