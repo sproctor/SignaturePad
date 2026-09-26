@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +60,10 @@ class BenchmarkActivity : ComponentActivity() {
                     state = state,
                     penColor = Color.Black,
                     penWidth = 3.dp,
+                    // Capped so the generated signature, which scales with the width, still fits the
+                    // pad's height on wide screens.
                     modifier = Modifier
+                        .widthIn(max = 800.dp)
                         .fillMaxWidth()
                         .height(300.dp)
                         .background(Color(0xFFEEEEEE))
