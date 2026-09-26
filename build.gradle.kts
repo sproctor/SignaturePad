@@ -57,7 +57,7 @@ allprojects {
                     }
                 }
                 scm {
-                    url.set("https://github.com/sproctor/SignaturePad/tree/main")
+                    url.set("https://github.com/sproctor/SignaturePad/tree/master")
                 }
             }
         }
