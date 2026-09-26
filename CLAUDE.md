@@ -15,17 +15,19 @@ Compose Signature Pad — a Kotlin Multiplatform signature capture library for C
 ./gradlew lintFix            # Run lint with auto-fix
 ./gradlew :signaturepad:jvmTest # Fastest test run; most tests live in jvmTest
 ./gradlew :benchmark:benchmark  # Run JMH benchmarks (reports in benchmark/build/reports/benchmarks)
+./gradlew :macrobenchmark:connectedBenchmarkAndroidTest  # Frame timing on a connected Android device
 ```
 
 Target-specific tasks follow Gradle KMP conventions (e.g., `jvmTest`, `compileKotlinJvm`). CI runs `./gradlew :signaturepad:allTests` on macOS.
 
 ## Architecture
 
-Four modules:
+Five modules:
 - **signaturepad** — the library, 100% common code (`src/commonMain/kotlin/com/seanproctor/signaturepad/`). Four files: `SignaturePad.kt` (composable and gesture handling), `SignaturePadState.kt` (state interface + impl, saver, `remember` functions), `ResizeBehavior.kt` (how a signature is remapped when the pad resizes), `Bezier.kt` (internal curve math). Uses `explicitApi()` mode.
 - **demo** — KMP demo with Android, JVM and JS targets. Platform entry points in `jvmMain` and `jsMain`, shared UI in `commonMain/SignatureBox.kt`.
 - **androidDemo** — Android demo app (standalone Android module, not KMP) that shows the shared UI from `:demo`.
 - **benchmark** — JVM-only kotlinx-benchmark (JMH) suite for `SignaturePadStateImpl`: capturing, drawing, resizing and exporting a synthetic signature.
+- **macrobenchmark** — Jetpack Macrobenchmark for `androidDemo` on a real device: frame times while drawing on top of a signature of 1,000 or 4,000 curves. It drives `BenchmarkActivity`, which only exists in `androidDemo`'s `benchmark` build type (`src/benchmark`). Takes about 2 minutes. Over wireless adb, Gradle's test runner can hang or uninstall the app mid-run; installing both `benchmark` APKs and running `adb shell am instrument -w -e class com.seanproctor.signaturepad.macrobenchmark.DrawingBenchmark com.seanproctor.signaturepad.macrobenchmark/androidx.test.runner.AndroidJUnitRunner` is more reliable. Results go to `/sdcard/Android/media/com.seanproctor.signaturepad.macrobenchmark/`.
 
 ### Drawing
 

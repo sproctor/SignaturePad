@@ -26,6 +26,13 @@ android {
                 "proguard-rules.pro"
             )
         }
+        // Built and installed by :macrobenchmark. A release build signed with the debug key, which
+        // adds BenchmarkActivity from src/benchmark.
+        create("benchmark") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
     }
 }
 
@@ -37,4 +44,8 @@ dependencies {
     implementation(project(":demo"))
     implementation(libs.compose.material)
     implementation(libs.activity.compose)
+    // BenchmarkActivity uses the library directly.
+    "benchmarkImplementation"(project(":signaturepad"))
+    // Lets :macrobenchmark clear the shader cache between runs.
+    "benchmarkImplementation"(libs.androidx.profileinstaller)
 }
