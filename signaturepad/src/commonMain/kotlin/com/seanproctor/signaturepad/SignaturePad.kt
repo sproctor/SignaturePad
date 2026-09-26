@@ -10,7 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -110,13 +112,28 @@ public fun SignaturePad(
                 // Every move redraws the pad, and redrawing a long signature is slow. The finished
                 // strokes only change when a stroke ends, so they're drawn once into an offscreen
                 // layer, which is reused until then. This block reruns when they change.
+                //
+                // The two parts are separate draws, so with a translucent pen, the places where the
+                // stroke in progress crosses a finished one would be blended twice and look darker.
+                // Instead both are drawn opaque into one layer, which is blended once with the pen's
+                // alpha, the same as drawing the whole signature as one path.
+                val opaquePen = penColor.copy(alpha = 1f)
+                val translucentLayer = if (penColor.alpha < 1f) {
+                    Paint().apply { alpha = penColor.alpha }
+                } else {
+                    null
+                }
                 finishedStrokes.compositingStrategy = CompositingStrategy.Offscreen
                 finishedStrokes.record {
-                    drawIntoCanvas { state.drawFinishedStrokes(it, penColor, penWidthPx) }
+                    drawIntoCanvas { state.drawFinishedStrokes(it, opaquePen, penWidthPx) }
                 }
                 onDrawBehind {
-                    drawLayer(finishedStrokes)
-                    drawIntoCanvas { state.drawStrokeInProgress(it, penColor, penWidthPx) }
+                    drawIntoCanvas { canvas ->
+                        if (translucentLayer != null) canvas.saveLayer(size.toRect(), translucentLayer)
+                        drawLayer(finishedStrokes)
+                        state.drawStrokeInProgress(canvas, opaquePen, penWidthPx)
+                        if (translucentLayer != null) canvas.restore()
+                    }
                 }
             },
     )

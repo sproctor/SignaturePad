@@ -104,6 +104,24 @@ class FinishedStrokesCacheTest {
     }
 
     @Test
+    fun startingAStroke_doesNotInvalidateTheFinishedStrokes() {
+        stroke(listOf(Offset(10f, 10f), Offset(20f, 30f), Offset(30f, 20f), Offset(40f, 40f)))
+        cacheFinishedStrokes()
+
+        assertFalse(invalidatedBy { state.gestureStarted(Offset(50f, 50f)) })
+    }
+
+    @Test
+    fun startingAStrokeBeforeTheLastOneEnded_invalidatesTheFinishedStrokes() {
+        // The stroke in progress is cut short and becomes a finished one.
+        state.gestureStarted(Offset(10f, 10f))
+        listOf(Offset(20f, 30f), Offset(30f, 20f), Offset(40f, 40f)).forEach { state.gestureMoved(it) }
+        cacheFinishedStrokes()
+
+        assertTrue(invalidatedBy { state.gestureStarted(Offset(50f, 50f)) })
+    }
+
+    @Test
     fun clearingAndResizing_invalidateTheFinishedStrokes() {
         stroke(listOf(Offset(10f, 10f), Offset(20f, 30f), Offset(30f, 20f), Offset(40f, 40f)))
 

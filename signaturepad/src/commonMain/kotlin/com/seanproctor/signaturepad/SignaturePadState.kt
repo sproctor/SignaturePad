@@ -107,8 +107,9 @@ public class SignaturePadStateImpl(
     override fun gestureStarted(point: Offset) {
         _signatureStarted.value = true
         gestureActive = true
-        // Reset state
-        resetStroke()
+        // Usually the last stroke has ended and there's no stroke in progress, so the finished
+        // strokes don't change and the pad's cache of them stays valid.
+        resetStroke(finishedStrokesChanged = strokeCurveCount > 0)
         dragTo(point)
     }
 
@@ -209,12 +210,12 @@ public class SignaturePadStateImpl(
 
     // Ends the stroke in progress, which makes its curves part of the finished ones. Everything that
     // changes the finished curves (ending a stroke, clearing, resizing, restoring) goes through here.
-    private fun resetStroke() {
+    private fun resetStroke(finishedStrokesChanged: Boolean = true) {
         points.clear()
         nextCurveStartsStroke = true
         lastGesturePoint = null
         strokeCurveCount = 0
-        finishedStrokesVersion.intValue++
+        if (finishedStrokesChanged) finishedStrokesVersion.intValue++
     }
 
     override fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float) {
