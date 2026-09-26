@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.kotlinx.benchmark) apply false
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.kotlin.multiplatform.library) apply false
+    alias(libs.plugins.android.test) apply false
     alias(libs.plugins.compose) apply false
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.vanniktech.maven.publish.base) apply false

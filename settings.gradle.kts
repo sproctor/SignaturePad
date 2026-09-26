@@ -23,6 +23,7 @@ plugins {
 include(":androidDemo")
 include(":benchmark")
 include(":demo")
+include(":macrobenchmark")
 include(":signaturepad")
 
 refreshVersions {
