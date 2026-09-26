@@ -4,6 +4,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
@@ -80,6 +81,15 @@ public class SignaturePadStateImpl(
     // a stroke can end and start exactly where that line crosses the pad's edge. Null when there is
     // nothing to draw from.
     private var lastGesturePoint: Offset? = null
+
+    // The number of curves at the end of [beziers] that belong to the stroke in progress. The ones
+    // before them are finished, and only change when a stroke ends or the whole signature changes, so
+    // the pad can cache them and redraw just the stroke in progress on each move.
+    private var strokeCurveCount = 0
+
+    // Changes whenever the finished curves do. Read by drawFinishedStrokes so that the pad knows when
+    // to redraw its cache.
+    private val finishedStrokesVersion = mutableIntStateOf(0)
 
     private var width: Int = 0
     private var height: Int = 0
@@ -170,6 +180,7 @@ public class SignaturePadStateImpl(
 
             val bezier = Bezier(startPoint, endPoint, prevPoint, nextPoint, nextCurveStartsStroke)
             beziers.add(bezier)
+            strokeCurveCount++
             nextCurveStartsStroke = false
 
             // Remove the first point
@@ -196,14 +207,38 @@ public class SignaturePadStateImpl(
         resetStroke()
     }
 
+    // Ends the stroke in progress, which makes its curves part of the finished ones. Everything that
+    // changes the finished curves (ending a stroke, clearing, resizing, restoring) goes through here.
     private fun resetStroke() {
         points.clear()
         nextCurveStartsStroke = true
         lastGesturePoint = null
+        strokeCurveCount = 0
+        finishedStrokesVersion.intValue++
     }
 
     override fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float) {
         drawCurves(canvas, beziers, penPaint(penColor, penWidth))
+    }
+
+    /**
+     * Draws the finished strokes: everything but the stroke in progress. Only observes the changes
+     * that affect them, so a cache drawn with this stays valid while a stroke is being drawn.
+     */
+    internal fun drawFinishedStrokes(canvas: Canvas, penColor: Color, penWidth: Float) {
+        finishedStrokesVersion.intValue
+        Snapshot.withoutReadObservation {
+            val finished = beziers.subList(0, beziers.size - strokeCurveCount)
+            drawCurves(canvas, finished, penPaint(penColor, penWidth))
+        }
+    }
+
+    /** Draws the stroke in progress, the part of the signature that [drawFinishedStrokes] leaves out. */
+    internal fun drawStrokeInProgress(canvas: Canvas, penColor: Color, penWidth: Float) {
+        // Reading the version redraws this when a stroke ends and moves to the finished ones.
+        finishedStrokesVersion.intValue
+        val stroke = beziers.subList(beziers.size - strokeCurveCount, beziers.size)
+        drawCurves(canvas, stroke, penPaint(penColor, penWidth))
     }
 
     override fun setSize(newWidth: Int, newHeight: Int) {

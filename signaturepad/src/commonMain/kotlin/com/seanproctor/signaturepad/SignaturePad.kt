@@ -1,16 +1,20 @@
 package com.seanproctor.signaturepad
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.layer.CompositingStrategy
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -36,7 +40,8 @@ public fun SignaturePad(
     enabled: Boolean = true,
 ) {
     val penWidthPx = with(LocalDensity.current) { penWidth.toPx() }
-    Canvas(
+    val finishedStrokes = rememberGraphicsLayer()
+    Spacer(
         modifier = modifier
             .clipToBounds()
             .pointerInput(state, enabled) {
@@ -95,12 +100,26 @@ public fun SignaturePad(
                         state.gestureEnded()
                     }
                 }
+            }
+            .drawWithCache {
+                if (state !is SignaturePadStateImpl) {
+                    return@drawWithCache onDrawBehind {
+                        drawIntoCanvas { state.drawSignature(it, penColor, penWidthPx) }
+                    }
+                }
+                // Every move redraws the pad, and redrawing a long signature is slow. The finished
+                // strokes only change when a stroke ends, so they're drawn once into an offscreen
+                // layer, which is reused until then. This block reruns when they change.
+                finishedStrokes.compositingStrategy = CompositingStrategy.Offscreen
+                finishedStrokes.record {
+                    drawIntoCanvas { state.drawFinishedStrokes(it, penColor, penWidthPx) }
+                }
+                onDrawBehind {
+                    drawLayer(finishedStrokes)
+                    drawIntoCanvas { state.drawStrokeInProgress(it, penColor, penWidthPx) }
+                }
             },
-    ) {
-        drawIntoCanvas { canvas ->
-            state.drawSignature(canvas, penColor, penWidthPx)
-        }
-    }
+    )
 }
 
 @Deprecated("Use SignaturePad(SignaturePadState, Color, Dp, Modifier = Modifier, Boolean) instead")

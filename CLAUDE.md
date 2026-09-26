@@ -34,6 +34,7 @@ Five modules:
 - Each touch point extends the stroke with a cubic `Bezier`. Its control points are smoothed from the neighboring points. A stroke's first point is buffered twice so its first segment gets drawn, and the last segment is added when the stroke ends.
 - `pathOf` joins every curve into one `Path`, starting a new contour where `Bezier.startsStroke` is set. `drawSignature` and `drawOnBitmap` draw it with a single `drawPath`, using a stroke paint with round caps and joins.
 - A tap is a zero-length curve, which the round cap draws as a dot.
+- `SignaturePad` doesn't redraw the whole signature on each move. `SignaturePadStateImpl` tracks which curves belong to the stroke in progress (`strokeCurveCount`). The finished strokes are recorded into an offscreen `GraphicsLayer` inside `drawWithCache`, which is only re-recorded when `finishedStrokesVersion` changes (in `resetStroke`: a stroke ends, or the signature is cleared, resized or restored). Each frame draws that layer plus the stroke in progress. Any other `SignaturePadState` implementation is drawn with `drawSignature` every frame.
 
 ### Tests
 
