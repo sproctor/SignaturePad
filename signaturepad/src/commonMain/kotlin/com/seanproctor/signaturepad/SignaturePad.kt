@@ -71,7 +71,8 @@ public fun SignaturePad(
                             onDragEnd = { up ->
                                 // The up event isn't passed to onDrag, but it can still carry the
                                 // last bit of movement.
-                                if (up.position != up.previousPosition) {
+                                up.historical.forEach { state.gestureMoved(it.position) }
+                                if (up.historical.isNotEmpty() || up.position != up.previousPosition) {
                                     state.gestureMoved(up.position)
                                 }
                                 state.gestureEnded()
@@ -82,6 +83,9 @@ public fun SignaturePad(
                                     change.position.x,
                                     change.position.y,
                                 )
+                                // Moves between two frames arrive together (Android batches them),
+                                // with all but the latest in the history.
+                                change.historical.forEach { state.gestureMoved(it.position) }
                                 state.gestureMoved(point)
                             }
                         )
