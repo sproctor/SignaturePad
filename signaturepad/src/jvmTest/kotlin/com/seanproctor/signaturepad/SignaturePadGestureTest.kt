@@ -56,7 +56,7 @@ class SignaturePadGestureTest {
     }
 
     @Test
-    fun liftingTheFirstFingerWhileASecondIsDown_doesNotDrawOverToIt() = runComposeUiTest {
+    fun liftingTheFirstFingerWhileASecondIsDown_continuesOnTheSecondAsANewStroke() = runComposeUiTest {
         val state = SignaturePadStateImpl()
         setContent {
             SignaturePad(state, Color.Black, 3.dp, Modifier.size(200.dp).testTag("pad"))
@@ -77,9 +77,15 @@ class SignaturePadGestureTest {
         }
         waitForIdle()
 
-        val ink = RecordingCanvas().also { state.drawSignature(it, Color.Black, 3f) }.allPoints
-        assertEquals(100f, ink.maxOf { it.x }, 0.5f, "the first finger's stroke doesn't end where it lifted")
-        assertEquals(100f, ink.maxOf { it.y }, 0.5f, "a line was drawn over to the second finger")
+        val canvas = RecordingCanvas().also { state.drawSignature(it, Color.Black, 3f) }
+        val first = canvas.allPoints.filter { it.y < 140f }
+        val second = canvas.allPoints.filter { it.y >= 140f }
+        assertEquals(2, canvas.contourCount, "the second finger didn't start a new stroke")
+        assertEquals(100f, first.maxOf { it.x }, 0.5f, "the first finger's stroke doesn't end where it lifted")
+        assertEquals(100f, first.maxOf { it.y }, 0.5f, "a line was drawn over to the second finger")
+        assertEquals(180f, second.minOf { it.y }, 0.5f, "a line was drawn over to the second finger")
+        assertEquals(160f, second.minOf { it.x }, 0.5f, "the second stroke doesn't start where that finger was")
+        assertEquals(190f, second.maxOf { it.x }, 0.5f, "the second stroke doesn't end where that finger lifted")
     }
 
     @Test
@@ -105,7 +111,7 @@ class SignaturePadGestureTest {
     }
 
     @Test
-    fun dragStartedByASecondFingerAfterTheFirstLifted_drawsNothing() = runComposeUiTest {
+    fun dragStartedByASecondFingerAfterTheFirstLifted_drawsWithTheSecondFinger() = runComposeUiTest {
         val state = SignaturePadStateImpl()
         setContent {
             SignaturePad(state, Color.Black, 3.dp, Modifier.size(200.dp).testTag("pad"))
@@ -123,8 +129,13 @@ class SignaturePadGestureTest {
         }
         waitForIdle()
 
-        val ink = RecordingCanvas().also { state.drawSignature(it, Color.Black, 3f) }.allPoints
-        assertEquals(emptyList(), ink, "a stroke was drawn for a drag the first finger didn't make")
+        val canvas = RecordingCanvas().also { state.drawSignature(it, Color.Black, 3f) }
+        val ink = canvas.allPoints
+        assertEquals(1, canvas.contourCount)
+        assertEquals(100f, ink.minOf { it.x }, 0.5f, "the stroke doesn't start where the second finger was")
+        assertEquals(180f, ink.maxOf { it.x }, 0.5f, "the stroke doesn't end where the second finger lifted")
+        assertEquals(150f, ink.minOf { it.y }, 0.5f, "ink was drawn from the first finger")
+        assertEquals(150f, ink.maxOf { it.y }, 0.5f, "ink was drawn from the first finger")
     }
 
     @Test
