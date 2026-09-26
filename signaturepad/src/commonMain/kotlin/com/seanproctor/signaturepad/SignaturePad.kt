@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -67,33 +68,53 @@ public fun SignaturePad(
             }
             .pointerInput(state, enabled) {
                 if (enabled) {
+                    // The finger drawing the stroke. If it lifts while another finger is down, the
+                    // drag carries on with that finger, which starts a new stroke where it is
+                    // rather than drawing a line over to it.
+                    var strokePointer: PointerId? = null
+                    fun strokeTo(change: PointerInputChange) {
+                        if (change.id != strokePointer) {
+                            state.gestureEnded()
+                            strokePointer = change.id
+                            state.gestureStarted(change.previousPosition)
+                        }
+                        // Moves between two frames arrive together (Android batches them), with all
+                        // but the latest in the history.
+                        change.historical.forEach { state.gestureMoved(it.position) }
+                        state.gestureMoved(change.position)
+                    }
                     try {
                         detectDragGestures(
                             orientationLock = null,
-                            // Start where the finger went down rather than where it crossed the
-                            // touch slop, so the beginning of the stroke isn't cut off.
-                            onDragStart = { down, _, _ ->
-                                state.gestureStarted(down.position)
+                            onDragStart = { down, slopChange, _ ->
+                                strokePointer = slopChange.id
+                                // Start where the finger went down rather than where it crossed the
+                                // touch slop, so the beginning of the stroke isn't cut off. If that
+                                // finger lifted and another one started the drag, start where that
+                                // one was before this move.
+                                state.gestureStarted(
+                                    if (slopChange.id == down.id) {
+                                        down.position
+                                    } else {
+                                        slopChange.previousPosition
+                                    },
+                                )
                             },
                             onDragEnd = { up ->
                                 // The up event isn't passed to onDrag, but it can still carry the
                                 // last bit of movement.
-                                up.historical.forEach { state.gestureMoved(it.position) }
                                 if (up.historical.isNotEmpty() || up.position != up.previousPosition) {
-                                    state.gestureMoved(up.position)
+                                    strokeTo(up)
                                 }
                                 state.gestureEnded()
+                                strokePointer = null
                             },
-                            onDragCancel = { state.gestureEnded() },
+                            onDragCancel = {
+                                state.gestureEnded()
+                                strokePointer = null
+                            },
                             onDrag = { change: PointerInputChange, _: Offset ->
-                                val point = Offset(
-                                    change.position.x,
-                                    change.position.y,
-                                )
-                                // Moves between two frames arrive together (Android batches them),
-                                // with all but the latest in the history.
-                                change.historical.forEach { state.gestureMoved(it.position) }
-                                state.gestureMoved(point)
+                                strokeTo(change)
                             }
                         )
                     } finally {
