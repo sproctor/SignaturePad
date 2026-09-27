@@ -49,5 +49,6 @@ val signaturePadState = rememberSaveableSignaturePadState(ResizeBehavior.Fit)
 ### Other options
 
 - `SignaturePad(enabled = false)` stops the pad from taking input.
+- `SignaturePad(minPointDistance = 4.dp)` skips moves closer than that to the last point drawn. The default, `SignaturePadDefaults.minPointDistance`, is 2.dp on desktop, where the mouse only reports whole pixels and slow strokes would come out wobbly, and 0.dp on the other platforms.
 - `signaturePadState.signatureStarted.value` becomes `true` once the user starts signing, which is handy for enabling a submit button.
 - `signaturePadState.clear()` erases the pad and sets `signatureStarted` back to `false`.
