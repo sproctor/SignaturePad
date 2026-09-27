@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.Dp
  * @param penWidth the width of the signature strokes in density-independent pixels.
  * @param modifier optional [Modifier] applied to the underlying canvas.
  * @param enabled when `false`, pointer input is ignored and the user cannot draw.
+ * @param minPointDistance moves closer than this to the last point drawn are skipped, which smooths
+ * out input that only has whole-pixel precision. A stroke still ends where the pointer lifted. See
+ * [SignaturePadDefaults.minPointDistance].
  */
 @Composable
 public fun SignaturePad(
@@ -41,8 +44,10 @@ public fun SignaturePad(
     penWidth: Dp,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    minPointDistance: Dp = SignaturePadDefaults.minPointDistance,
 ) {
     val penWidthPx = with(LocalDensity.current) { penWidth.toPx() }
+    val minPointDistancePx = with(LocalDensity.current) { minPointDistance.toPx() }
     val finishedStrokes = rememberGraphicsLayer()
     Spacer(
         modifier = modifier
@@ -66,22 +71,46 @@ public fun SignaturePad(
             .onSizeChanged {
                 state.setSize(it.width, it.height)
             }
-            .pointerInput(state, enabled) {
+            .pointerInput(state, enabled, minPointDistancePx) {
                 if (enabled) {
                     // The finger drawing the stroke. If it lifts while another finger is down, the
                     // drag carries on with that finger, which starts a new stroke where it is
                     // rather than drawing a line over to it.
                     var strokePointer: PointerId? = null
+                    // The last point passed to the state, and the latest move held back for being
+                    // too close to it. The held move is drawn if the stroke ends before another
+                    // one gets far enough away, so the stroke ends where the pointer lifted.
+                    var lastPoint = Offset.Zero
+                    var heldPoint: Offset? = null
+                    fun startStroke(point: Offset) {
+                        state.gestureStarted(point)
+                        lastPoint = point
+                        heldPoint = null
+                    }
+                    fun moveTo(point: Offset) {
+                        if ((point - lastPoint).getDistanceSquared() < minPointDistancePx * minPointDistancePx) {
+                            heldPoint = point
+                            return
+                        }
+                        state.gestureMoved(point)
+                        lastPoint = point
+                        heldPoint = null
+                    }
+                    fun endStroke() {
+                        heldPoint?.let { state.gestureMoved(it) }
+                        heldPoint = null
+                        state.gestureEnded()
+                    }
                     fun strokeTo(change: PointerInputChange) {
                         if (change.id != strokePointer) {
-                            state.gestureEnded()
+                            endStroke()
                             strokePointer = change.id
-                            state.gestureStarted(change.previousPosition)
+                            startStroke(change.previousPosition)
                         }
                         // Moves between two frames arrive together (Android batches them), with all
                         // but the latest in the history.
-                        change.historical.forEach { state.gestureMoved(it.position) }
-                        state.gestureMoved(change.position)
+                        change.historical.forEach { moveTo(it.position) }
+                        moveTo(change.position)
                     }
                     try {
                         detectDragGestures(
@@ -92,7 +121,7 @@ public fun SignaturePad(
                                 // touch slop, so the beginning of the stroke isn't cut off. If that
                                 // finger lifted and another one started the drag, start where that
                                 // one was before this move.
-                                state.gestureStarted(
+                                startStroke(
                                     if (slopChange.id == down.id) {
                                         down.position
                                     } else {
@@ -106,11 +135,11 @@ public fun SignaturePad(
                                 if (up.historical.isNotEmpty() || up.position != up.previousPosition) {
                                     strokeTo(up)
                                 }
-                                state.gestureEnded()
+                                endStroke()
                                 strokePointer = null
                             },
                             onDragCancel = {
-                                state.gestureEnded()
+                                endStroke()
                                 strokePointer = null
                             },
                             onDrag = { change: PointerInputChange, _: Offset ->
@@ -120,7 +149,7 @@ public fun SignaturePad(
                     } finally {
                         // Neither callback runs when this block is cancelled mid-drag (enabled or
                         // state changed), so finish the stroke here.
-                        state.gestureEnded()
+                        endStroke()
                     }
                 }
             }
@@ -160,7 +189,20 @@ public fun SignaturePad(
     )
 }
 
-@Deprecated("Use SignaturePad(SignaturePadState, Color, Dp, Modifier = Modifier, Boolean) instead")
+// Keeps apps built against 2.4.0, before minPointDistance, linking.
+@Deprecated("Kept for binary compatibility", level = DeprecationLevel.HIDDEN)
+@Composable
+public fun SignaturePad(
+    state: SignaturePadState,
+    penColor: Color,
+    penWidth: Dp,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    SignaturePad(state, penColor, penWidth, modifier, enabled, SignaturePadDefaults.minPointDistance)
+}
+
+@Deprecated("Use SignaturePad(SignaturePadState, Color, Dp, Modifier = Modifier, Boolean, Dp) instead")
 @Composable
 public fun SignaturePad(
     state: SignaturePadState,
