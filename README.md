@@ -46,6 +46,22 @@ val signaturePadState = rememberSaveableSignaturePadState(ResizeBehavior.Fit)
 - `Stretch` scales each axis to fill the new size.
 - `Custom` maps each point with your own function.
 
+### Saving the signature as it's drawn
+
+`signaturePadState.signature` holds the finished strokes as an immutable `Signature`, and gets a new one each time a stroke ends or the signature is cleared, resized or restored. Watch it to save the signature without a submit button:
+
+```kotlin
+LaunchedEffect(signaturePadState) {
+    snapshotFlow { signaturePadState.signature }
+        .collectLatest { signature ->
+            val bitmap = if (signature.isEmpty) null else signature.toImageBitmap(Color.Black, penWidth = 6f)
+            saveSignature(bitmap)
+        }
+}
+```
+
+A `Signature` never changes, so it can be exported on a background thread. `toImageBitmap` draws it at the pad's size, and `drawOnBitmap` scales it to fit a bitmap of your own.
+
 ### Other options
 
 - `SignaturePad(enabled = false)` stops the pad from taking input.
