@@ -54,13 +54,12 @@ val signaturePadState = rememberSaveableSignaturePadState(ResizeBehavior.Fit)
 LaunchedEffect(signaturePadState) {
     snapshotFlow { signaturePadState.signature }
         .collectLatest { signature ->
-            val bitmap = if (signature.isEmpty) null else signature.toImageBitmap(Color.Black, penWidth = 6f)
-            saveSignature(bitmap)
+            saveSignature(signature.toImageBitmap(Color.Black, penWidth = 6f))
         }
 }
 ```
 
-A `Signature` never changes, so it can be exported on a background thread. `toImageBitmap` draws it at the pad's size, and `drawOnBitmap` scales it to fit a bitmap of your own.
+A `Signature` never changes, so it can be exported on a background thread. `toImageBitmap` draws it at the pad's size, or returns `null` when it's empty, and `drawOnBitmap` scales it to fit a bitmap of your own.
 
 ### Other options
 

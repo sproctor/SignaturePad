@@ -29,11 +29,12 @@ public class Signature internal constructor(
         drawCurves(Canvas(bitmap), penPaint(penColor, penWidth), curves.map { it.scale(scaling) })
     }
 
-    /** Draws the signature onto a new bitmap the size of the pad. The pad must have been laid out. */
-    public fun toImageBitmap(penColor: Color, penWidth: Float): ImageBitmap {
-        require(width > 0 && height > 0) { "The pad hasn't been laid out, so the signature has no size" }
-        return ImageBitmap(width, height).also { drawOnBitmap(it, penColor, penWidth) }
-    }
+    /**
+     * Draws the signature onto a new bitmap the size of the pad, or returns `null` when it's empty. An
+     * empty signature has no size, since the pad can be laid out or resized without publishing one.
+     */
+    public fun toImageBitmap(penColor: Color, penWidth: Float): ImageBitmap? =
+        if (isEmpty) null else ImageBitmap(width, height).also { drawOnBitmap(it, penColor, penWidth) }
 
     internal companion object {
         val Empty: Signature = Signature(persistentListOf(), 0, 0)

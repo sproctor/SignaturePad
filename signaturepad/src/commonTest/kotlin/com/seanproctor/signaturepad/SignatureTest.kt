@@ -4,9 +4,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotSame
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -121,9 +121,12 @@ class SignatureTest {
     }
 
     @Test
-    fun toImageBitmap_beforeThePadIsLaidOut_fails() {
-        assertFailsWith<IllegalArgumentException> {
-            SignaturePadStateImpl().signature.toImageBitmap(Color.Black, 3f)
-        }
+    fun toImageBitmap_ofAnEmptySignature_isNull() {
+        assertNull(state.signature.toImageBitmap(Color.Black, 3f), "a pad that was never drawn on")
+
+        stroke(strokeA)
+        state.clear()
+        state.setSize(200, 200)
+        assertNull(state.signature.toImageBitmap(Color.Black, 3f), "a cleared pad, resized since")
     }
 }
