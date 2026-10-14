@@ -27,6 +27,9 @@ public sealed interface ResizeBehavior {
      * Maps each point of the signature from the old space to the new one with a caller-supplied
      * function. The function receives a [point] in the old coordinate space along with the [oldSize]
      * and [newSize] of the pad, and returns the point's position in the new space.
+     *
+     * [SignaturePadStateImpl] calls it while holding its lock, so it mustn't wait on another thread
+     * that uses the same state, which would deadlock.
      */
     public fun interface Custom : ResizeBehavior {
         public fun transformPoint(point: Offset, oldSize: Size, newSize: Size): Offset

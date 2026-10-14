@@ -1,5 +1,6 @@
 package com.seanproctor.signaturepad
 
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -110,6 +111,29 @@ class ConcurrencyTest {
         assertEquals(emptyList(), failures)
         state.assertConsistent()
     }
+
+    @Test
+    fun aChangeInsideASnapshot_isSeenByOtherCallsRightAway() {
+        val state = SignaturePadStateImpl(ResizeBehavior.Fit).apply { setSize(200, 100) }
+        state.scribble(0)
+        val curvesPerStroke = state.curveCount()
+
+        // As if the app cleared the pad inside Snapshot.withMutableSnapshot, and the user started the
+        // next stroke before that snapshot applied.
+        val snapshot = Snapshot.takeMutableSnapshot()
+        try {
+            snapshot.enter { state.clear() }
+            state.scribble(1)
+            snapshot.apply().check()
+        } finally {
+            snapshot.dispose()
+        }
+
+        assertEquals(curvesPerStroke, state.curveCount(), "the clear() or the stroke after it was lost")
+    }
+
+    // toFloatList() stores a 3-float header, then 9 floats per curve.
+    private fun SignaturePadStateImpl.curveCount() = (toFloatList().size - 3) / 9
 
     // Once every thread has stopped, the finished strokes and the stroke in progress together are the
     // whole signature, and a save and restore keeps all of it.

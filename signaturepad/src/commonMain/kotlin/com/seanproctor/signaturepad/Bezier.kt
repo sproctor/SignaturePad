@@ -84,12 +84,12 @@ internal class Bezier(
 }
 
 /**
- * Joins [curves] into a single path, with one contour per stroke. The first curve must start a
- * stroke, since a path's first contour needs a starting point.
+ * Joins [curves] into a single path, with one contour per stroke, taking each list in turn. The
+ * first curve must start a stroke, since a path's first contour needs a starting point.
  */
-internal fun pathOf(curves: List<Bezier>): Path {
+internal fun pathOf(vararg curves: List<Bezier>): Path {
     val path = Path()
-    curves.forEach { it.addTo(path) }
+    for (list in curves) list.forEach { it.addTo(path) }
     return path
 }
 

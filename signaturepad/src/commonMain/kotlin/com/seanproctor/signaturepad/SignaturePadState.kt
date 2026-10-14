@@ -4,6 +4,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
@@ -73,10 +74,16 @@ public class SignaturePadStateImpl(
 ) : SignaturePadState {
 
     // Apps can call the state from any thread while the pad's gesture handlers call it on the main
-    // thread, so every public method holds this while it reads or changes the fields below. The
-    // pad's draw pass doesn't take it: it only reads [curves] and [finishedStrokes], which hold
-    // immutable values that are replaced rather than changed.
+    // thread, so every public method holds this while it reads or changes the fields below (see
+    // [locked]). The pad's draw pass doesn't take it: it only reads [curves] and [finishedStrokes],
+    // which hold immutable values that are replaced rather than changed.
     private val lock = SynchronizedObject()
+
+    // Runs [block] holding the lock, in the global snapshot. A caller inside a snapshot of its own
+    // (in Snapshot.withMutableSnapshot, or during composition) would otherwise keep its changes to
+    // itself until that snapshot applies, so a call on another thread would build on the old curves
+    // once the lock was released, and one of the two changes would be lost.
+    private inline fun <T> locked(block: () -> T): T = synchronized(lock) { Snapshot.global(block) }
 
     private val _signatureStarted = mutableStateOf(false)
     override val signatureStarted: State<Boolean> = _signatureStarted
@@ -94,10 +101,10 @@ public class SignaturePadStateImpl(
 
     private val curves = mutableStateOf(Curves(persistentListOf(), persistentListOf()), referentialEqualityPolicy())
 
-    // The finished strokes again, in a state of their own that's only replaced when they change, not
+    // The finished strokes, which only change when a stroke ends or the whole signature changes, not
     // on each move. The pad caches them and is invalidated by this, so it redraws just the stroke in
     // progress on each move.
-    private val finishedStrokes = mutableStateOf<List<Bezier>>(persistentListOf(), referentialEqualityPolicy())
+    private val finishedStrokes = derivedStateOf(referentialEqualityPolicy()) { curves.value.finished }
 
     // Whether the next curve starts a new stroke. It does after a gesture starts, and after anything
     // else that discards the points of the stroke in progress.
@@ -121,7 +128,7 @@ public class SignaturePadStateImpl(
     // on screen becomes the new source.
     private var remappedCount = -1
 
-    override fun gestureStarted(point: Offset): Unit = synchronized(lock) {
+    override fun gestureStarted(point: Offset): Unit = locked {
         _signatureStarted.value = true
         gestureActive = true
         // Usually the last stroke has ended and there's no stroke in progress, so the finished
@@ -130,7 +137,7 @@ public class SignaturePadStateImpl(
         dragTo(point)
     }
 
-    override fun gestureMoved(point: Offset): Unit = synchronized(lock) {
+    override fun gestureMoved(point: Offset): Unit = locked {
         if (gestureActive) dragTo(point)
     }
 
@@ -204,7 +211,7 @@ public class SignaturePadStateImpl(
         }
     }
 
-    override fun gestureEnded(): Unit = synchronized(lock) {
+    override fun gestureEnded(): Unit = locked {
         gestureActive = false
         finishStroke()
     }
@@ -245,13 +252,16 @@ public class SignaturePadStateImpl(
     // Everything that changes the curves (a move, ending a stroke, clearing, resizing, restoring)
     // goes through here.
     private fun setCurves(finished: PersistentList<Bezier>, stroke: PersistentList<Bezier>) {
+        val current = curves.value
+        // Clearing or resizing an empty pad changes nothing, so leave the state alone rather than
+        // make the pad redraw.
+        if (finished === current.finished && stroke === current.stroke) return
         curves.value = Curves(finished, stroke)
-        // The same list when only the stroke in progress changed, which leaves the pad's cache valid.
-        finishedStrokes.value = finished
     }
 
     override fun drawSignature(canvas: Canvas, penColor: Color, penWidth: Float) {
-        drawCurves(canvas, curves.value.all, penPaint(penColor, penWidth))
+        val current = curves.value
+        drawCurves(canvas, penPaint(penColor, penWidth), current.finished, current.stroke)
     }
 
     /**
@@ -259,7 +269,7 @@ public class SignaturePadStateImpl(
      * that affect them, so a cache drawn with this stays valid while a stroke is being drawn.
      */
     internal fun drawFinishedStrokes(canvas: Canvas, penColor: Color, penWidth: Float) {
-        drawCurves(canvas, finishedStrokes.value, penPaint(penColor, penWidth))
+        drawCurves(canvas, penPaint(penColor, penWidth), finishedStrokes.value)
     }
 
     /**
@@ -268,15 +278,14 @@ public class SignaturePadStateImpl(
      * at all, since the two halves are read separately. The next frame draws it once.
      */
     internal fun drawStrokeInProgress(canvas: Canvas, penColor: Color, penWidth: Float) {
-        drawCurves(canvas, curves.value.stroke, penPaint(penColor, penWidth))
+        drawCurves(canvas, penPaint(penColor, penWidth), curves.value.stroke)
     }
 
     override fun setSize(newWidth: Int, newHeight: Int) {
-        synchronized(lock) { resize(newWidth, newHeight) }
+        locked { resize(newWidth, newHeight) }
     }
 
-    // Runs a ResizeBehavior.Custom mapper while holding the lock. A mapper that waits on another
-    // thread that's calling the state would deadlock, but there's no reason for one to.
+    // Runs a ResizeBehavior.Custom mapper while holding the lock, which its KDoc warns about.
     private fun resize(newWidth: Int, newHeight: Int) {
         // Nothing can be drawn at a zero size (while the pad is collapsed, for example), so keep the
         // signature as it is and remap from the last real size once the pad is laid out again.
@@ -310,7 +319,7 @@ public class SignaturePadStateImpl(
         remappedCount = remapped.size
     }
 
-    override fun clear(): Unit = synchronized(lock) { clearCurves() }
+    override fun clear(): Unit = locked { clearCurves() }
 
     private fun clearCurves() {
         _signatureStarted.value = false
@@ -330,7 +339,7 @@ public class SignaturePadStateImpl(
      * curves belong to, the started flag, then for each curve its four source points as `x, y` pairs
      * followed by whether it starts a stroke.
      */
-    internal fun toFloatList(): List<Float> = synchronized(lock) {
+    internal fun toFloatList(): List<Float> = locked {
         val all = curves.value.all
         // Save the remap source while it's still current, so that resizing after a restore (the
         // activity is recreated on rotation) also maps from it.
@@ -367,7 +376,7 @@ public class SignaturePadStateImpl(
             )
             i += FLOATS_PER_BEZIER
         }
-        synchronized(lock) {
+        locked {
             width = data[0].toInt()
             height = data[1].toInt()
             _signatureStarted.value = data[2] != 0f
@@ -386,14 +395,14 @@ public class SignaturePadStateImpl(
     ) {
         // Take the curves and the size they belong to together, then draw without holding the lock,
         // so exporting doesn't hold up input.
-        val (all, padWidth, padHeight) = synchronized(lock) { Triple(curves.value.all, width, height) }
+        val (all, padWidth, padHeight) = locked { Triple(curves.value.all, width, height) }
         val scaling = min(bitmap.width / padWidth.toFloat(), bitmap.height / padHeight.toFloat())
-        drawCurves(Canvas(bitmap), all.map { it.scale(scaling) }, penPaint(penColor, penWidth))
+        drawCurves(Canvas(bitmap), penPaint(penColor, penWidth), all.map { it.scale(scaling) })
     }
 
-    private fun drawCurves(canvas: Canvas, curves: List<Bezier>, paint: Paint) {
-        if (curves.isEmpty()) return
-        canvas.drawPath(pathOf(curves), paint)
+    private fun drawCurves(canvas: Canvas, paint: Paint, vararg curves: List<Bezier>) {
+        if (curves.all { it.isEmpty() }) return
+        canvas.drawPath(pathOf(*curves), paint)
     }
 
     private fun penPaint(color: Color, width: Float) = Paint().apply {
