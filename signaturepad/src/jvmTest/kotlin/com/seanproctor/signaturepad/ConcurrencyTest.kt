@@ -29,7 +29,8 @@ class ConcurrencyTest {
         val start = CountDownLatch(1)
         val deadline = System.nanoTime() + runMillis * 1_000_000
         val threads = tasks.map { task ->
-            thread {
+            // A daemon, so a thread stuck in the state can't keep the test JVM from exiting.
+            thread(isDaemon = true) {
                 start.await()
                 var i = 0
                 try {
@@ -40,7 +41,12 @@ class ConcurrencyTest {
             }
         }
         start.countDown()
-        threads.forEach { it.join() }
+        // A deadlock in the state would hang the test run rather than fail it, so give up on a thread
+        // that hasn't stopped long after the time is up.
+        threads.forEach {
+            it.join(runMillis + 10_000)
+            if (it.isAlive) failures.add(AssertionError("${it.name} didn't stop: the state may be deadlocked"))
+        }
         return failures
     }
 

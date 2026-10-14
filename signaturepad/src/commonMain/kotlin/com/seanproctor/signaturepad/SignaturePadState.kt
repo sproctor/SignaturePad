@@ -371,6 +371,8 @@ public class SignaturePadStateImpl(
             width = data[0].toInt()
             height = data[1].toInt()
             _signatureStarted.value = data[2] != 0f
+            // Like clear(), this replaces the whole signature, so a gesture in progress stops here.
+            gestureActive = false
             dropPoints()
             setCurves(restored.build(), persistentListOf())
             resetRemapSource()
