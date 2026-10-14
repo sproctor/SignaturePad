@@ -1,0 +1,115 @@
+package com.seanproctor.signaturepad
+
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import java.util.Collections
+import java.util.concurrent.CountDownLatch
+import kotlin.concurrent.thread
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+/**
+ * Apps can call [SignaturePadStateImpl] from any thread while the pad takes input and draws on the
+ * main thread. These run input, clearing, resizing, drawing and exporting on separate threads at
+ * once, and check that nothing throws and the state is consistent afterwards.
+ */
+class ConcurrencyTest {
+
+    private val runMillis = 1_000L
+
+    // Runs each task on its own thread, repeatedly, until the time is up, and returns what they threw.
+    private fun race(vararg tasks: (iteration: Int) -> Unit): List<Throwable> {
+        val failures = Collections.synchronizedList(mutableListOf<Throwable>())
+        val start = CountDownLatch(1)
+        val deadline = System.nanoTime() + runMillis * 1_000_000
+        val threads = tasks.map { task ->
+            thread {
+                start.await()
+                var i = 0
+                try {
+                    while (System.nanoTime() < deadline) task(i++)
+                } catch (t: Throwable) {
+                    failures.add(t)
+                }
+            }
+        }
+        start.countDown()
+        threads.forEach { it.join() }
+        return failures
+    }
+
+    private fun SignaturePadStateImpl.scribble(i: Int) {
+        val y = 10f + (i % 80)
+        gestureStarted(Offset(5f, y))
+        for (x in 10..190 step 10) gestureMoved(Offset(x.toFloat(), y + (x % 20)))
+        gestureEnded()
+    }
+
+    private fun SignaturePadStateImpl.drawAll() {
+        drawSignature(RecordingCanvas(), Color.Black, 3f)
+        drawFinishedStrokes(RecordingCanvas(), Color.Black, 3f)
+        drawStrokeInProgress(RecordingCanvas(), Color.Black, 3f)
+    }
+
+    @Test
+    fun inputClearAndDraw_onSeparateThreads() {
+        val state = SignaturePadStateImpl(ResizeBehavior.Fit).apply { setSize(200, 100) }
+
+        val failures = race(
+            { i -> state.scribble(i) },
+            { i -> if (i % 4 == 0) state.clear() else Thread.yield() },
+            { _ -> state.drawAll() },
+        )
+
+        assertEquals(emptyList(), failures)
+        state.assertConsistent()
+    }
+
+    @Test
+    fun inputResizeAndExport_onSeparateThreads() {
+        val state = SignaturePadStateImpl(ResizeBehavior.Fit).apply { setSize(200, 100) }
+        val bitmap = ImageBitmap(100, 50)
+
+        val failures = race(
+            { i -> state.scribble(i) },
+            { i -> if (i % 2 == 0) state.setSize(400, 200) else state.setSize(200, 100) },
+            { _ -> state.drawAll() },
+            { _ -> state.drawOnBitmap(bitmap, Color.Black, 2f) },
+            { _ -> SignaturePadStateImpl(ResizeBehavior.Fit).restoreFromFloatList(state.toFloatList()) },
+        )
+
+        assertEquals(emptyList(), failures)
+        state.assertConsistent()
+    }
+
+    @Test
+    fun twoThreadsDrawingStrokes_bothKeepTheirCurves() {
+        val state = SignaturePadStateImpl(ResizeBehavior.Fit).apply { setSize(200, 100) }
+
+        val failures = race(
+            { i -> state.scribble(i) },
+            { i -> state.scribble(i + 40) },
+            { _ -> state.drawAll() },
+        )
+
+        assertEquals(emptyList(), failures)
+        state.assertConsistent()
+    }
+
+    // Once every thread has stopped, the finished strokes and the stroke in progress together are the
+    // whole signature, and a save and restore keeps all of it.
+    private fun SignaturePadStateImpl.assertConsistent() {
+        fun draw(block: (RecordingCanvas) -> Unit) = RecordingCanvas().also(block).drawnStrokes
+        val all = draw { drawSignature(it, Color.Black, 3f) }
+        val finished = draw { drawFinishedStrokes(it, Color.Black, 3f) }
+        val inProgress = draw { drawStrokeInProgress(it, Color.Black, 3f) }
+        assertEquals(all, finished + inProgress)
+        assertTrue(inProgress.isEmpty(), "every gesture ended, but a stroke is still in progress")
+
+        val saved = toFloatList()
+        val restored = SignaturePadStateImpl(ResizeBehavior.Fit).apply { restoreFromFloatList(saved) }
+        assertEquals(all.size, draw { restored.drawSignature(it, Color.Black, 3f) }.size)
+    }
+}

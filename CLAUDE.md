@@ -34,7 +34,11 @@ Five modules:
 - Each touch point extends the stroke with a cubic `Bezier`. Its control points are smoothed from the neighboring points. A stroke's first point is buffered twice so its first segment gets drawn, and the last segment is added when the stroke ends.
 - `pathOf` joins every curve into one `Path`, starting a new contour where `Bezier.startsStroke` is set. `drawSignature` and `drawOnBitmap` draw it with a single `drawPath`, using a stroke paint with round caps and joins.
 - A tap is a zero-length curve, which the round cap draws as a dot.
-- `SignaturePad` doesn't redraw the whole signature on each move. `SignaturePadStateImpl` tracks which curves belong to the stroke in progress (`strokeCurveCount`). The finished strokes are recorded into an offscreen `GraphicsLayer` inside `drawWithCache`, which is only re-recorded when `finishedStrokesVersion` changes (in `resetStroke`: a stroke ends, or the signature is cleared, resized or restored). Each frame draws that layer plus the stroke in progress. With a translucent pen, both are drawn opaque inside a `saveLayer` carrying the pen's alpha, so crossings are blended once, as with a single path. Any other `SignaturePadState` implementation is drawn with `drawSignature` every frame.
+- `SignaturePad` doesn't redraw the whole signature on each move. `SignaturePadStateImpl` keeps the finished strokes and the stroke in progress as two immutable lists in one snapshot state (`curves`), and the finished strokes again in a state of their own (`finishedStrokes`). The finished strokes are recorded into an offscreen `GraphicsLayer` inside `drawWithCache`, which is only re-recorded when `finishedStrokes` is replaced (a stroke ends, or the signature is cleared, resized or restored). Each frame draws that layer plus the stroke in progress. With a translucent pen, both are drawn opaque inside a `saveLayer` carrying the pen's alpha, so crossings are blended once, as with a single path. Any other `SignaturePadState` implementation is drawn with `drawSignature` every frame.
+
+### Threads
+
+Apps can call `SignaturePadStateImpl` from any thread while the pad takes input on the main thread. Every public method holds `lock` (atomicfu's `SynchronizedObject`) while it reads or changes the state, and every change goes through `setCurves`. The pad's draw pass doesn't take the lock: it only reads `curves` and `finishedStrokes`, whose lists are replaced and never changed. `ConcurrencyTest` runs input, clearing, resizing, drawing and exporting on separate threads at once.
 
 ### Tests
 

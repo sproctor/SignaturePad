@@ -54,6 +54,8 @@ kotlin {
             dependencies {
                 // The public API takes and returns Compose types, so apps compile against them too.
                 api(libs.compose.foundation)
+                // SynchronizedObject, a lock that works in common code.
+                implementation(libs.atomicfu)
             }
         }
         commonTest {
