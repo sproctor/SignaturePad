@@ -19,6 +19,10 @@ class ConcurrencyTest {
 
     private val runMillis = 1_000L
 
+    private companion object {
+        const val MAX_STROKES = 2_000
+    }
+
     // Runs each task on its own thread, repeatedly, until the time is up, and returns what they threw.
     private fun race(vararg tasks: (iteration: Int) -> Unit): List<Throwable> {
         val failures = Collections.synchronizedList(mutableListOf<Throwable>())
@@ -40,8 +44,11 @@ class ConcurrencyTest {
         return failures
     }
 
-    private fun SignaturePadStateImpl.scribble(i: Int) {
-        val y = 10f + (i % 80)
+    // Draws one stroke per call, up to a limit, so the signature doesn't grow without bound while the
+    // other threads run.
+    private fun SignaturePadStateImpl.scribble(i: Int, yOffset: Int = 0) {
+        if (i >= MAX_STROKES) return Thread.yield()
+        val y = 10f + ((i + yOffset) % 80)
         gestureStarted(Offset(5f, y))
         for (x in 10..190 step 10) gestureMoved(Offset(x.toFloat(), y + (x % 20)))
         gestureEnded()
@@ -85,12 +92,12 @@ class ConcurrencyTest {
     }
 
     @Test
-    fun twoThreadsDrawingStrokes_bothKeepTheirCurves() {
+    fun twoInputThreads_atOnce() {
         val state = SignaturePadStateImpl(ResizeBehavior.Fit).apply { setSize(200, 100) }
 
         val failures = race(
             { i -> state.scribble(i) },
-            { i -> state.scribble(i + 40) },
+            { i -> state.scribble(i, yOffset = 40) },
             { _ -> state.drawAll() },
         )
 

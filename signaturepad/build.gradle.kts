@@ -56,6 +56,8 @@ kotlin {
                 api(libs.compose.foundation)
                 // SynchronizedObject, a lock that works in common code.
                 implementation(libs.atomicfu)
+                // Persistent lists, so adding a curve doesn't copy the signature.
+                implementation(libs.kotlinx.collections.immutable)
             }
         }
         commonTest {

@@ -15,6 +15,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlin.math.min
 
 /**
@@ -83,17 +86,18 @@ public class SignaturePadStateImpl(
     private var gestureActive = false
 
     // The finished strokes and the stroke in progress, replaced together, so a read on another
-    // thread always gets the two from the same moment.
-    private class Curves(val finished: List<Bezier>, val stroke: List<Bezier>) {
-        val all: List<Bezier> get() = if (stroke.isEmpty()) finished else finished + stroke
+    // thread always gets the two from the same moment. They're persistent lists, so adding a curve
+    // or ending a stroke shares the curves already there instead of copying them.
+    private class Curves(val finished: PersistentList<Bezier>, val stroke: PersistentList<Bezier>) {
+        val all: PersistentList<Bezier> get() = if (stroke.isEmpty()) finished else finished.addAll(stroke)
     }
 
-    private val curves = mutableStateOf(Curves(emptyList(), emptyList()), referentialEqualityPolicy())
+    private val curves = mutableStateOf(Curves(persistentListOf(), persistentListOf()), referentialEqualityPolicy())
 
     // The finished strokes again, in a state of their own that's only replaced when they change, not
     // on each move. The pad caches them and is invalidated by this, so it redraws just the stroke in
     // progress on each move.
-    private val finishedStrokes = mutableStateOf(emptyList<Bezier>(), referentialEqualityPolicy())
+    private val finishedStrokes = mutableStateOf<List<Bezier>>(persistentListOf(), referentialEqualityPolicy())
 
     // Whether the next curve starts a new stroke. It does after a gesture starts, and after anything
     // else that discards the points of the stroke in progress.
@@ -221,14 +225,14 @@ public class SignaturePadStateImpl(
 
     private fun addToStroke(bezier: Bezier) {
         val current = curves.value
-        setCurves(current.finished, current.stroke + bezier)
+        setCurves(current.finished, current.stroke.add(bezier))
     }
 
     // Ends the stroke in progress, which makes its curves part of the finished ones.
     private fun resetStroke() {
         dropPoints()
         val current = curves.value
-        if (current.stroke.isNotEmpty()) setCurves(current.all, emptyList())
+        if (current.stroke.isNotEmpty()) setCurves(current.all, persistentListOf())
     }
 
     // Forgets the points of the stroke in progress, so the next move starts a new stroke.
@@ -240,7 +244,7 @@ public class SignaturePadStateImpl(
 
     // Everything that changes the curves (a move, ending a stroke, clearing, resizing, restoring)
     // goes through here.
-    private fun setCurves(finished: List<Bezier>, stroke: List<Bezier>) {
+    private fun setCurves(finished: PersistentList<Bezier>, stroke: PersistentList<Bezier>) {
         curves.value = Curves(finished, stroke)
         // The same list when only the stroke in progress changed, which leaves the pad's cache valid.
         finishedStrokes.value = finished
@@ -301,8 +305,8 @@ public class SignaturePadStateImpl(
         val newSize = Size(newWidth.toFloat(), newHeight.toFloat())
         val remapped = remapSource.map { bezier ->
             bezier.map { point -> resizeBehavior.mapPoint(point, remapSourceSize, newSize) }
-        }
-        setCurves(remapped, emptyList())
+        }.toPersistentList()
+        setCurves(remapped, persistentListOf())
         remappedCount = remapped.size
     }
 
@@ -312,7 +316,7 @@ public class SignaturePadStateImpl(
         _signatureStarted.value = false
         gestureActive = false
         dropPoints()
-        setCurves(emptyList(), emptyList())
+        setCurves(persistentListOf(), persistentListOf())
         resetRemapSource()
     }
 
@@ -349,7 +353,7 @@ public class SignaturePadStateImpl(
     /** Restores the signature previously produced by [toFloatList]. */
     internal fun restoreFromFloatList(data: List<Float>) {
         if (data.size < SAVE_HEADER_SIZE) return
-        val restored = ArrayList<Bezier>((data.size - SAVE_HEADER_SIZE) / FLOATS_PER_BEZIER)
+        val restored = persistentListOf<Bezier>().builder()
         var i = SAVE_HEADER_SIZE
         while (i + FLOATS_PER_BEZIER <= data.size) {
             restored.add(
@@ -368,7 +372,7 @@ public class SignaturePadStateImpl(
             height = data[1].toInt()
             _signatureStarted.value = data[2] != 0f
             dropPoints()
-            setCurves(restored, emptyList())
+            setCurves(restored.build(), persistentListOf())
             resetRemapSource()
         }
     }
