@@ -166,6 +166,8 @@ public class SignaturePadStateImpl(
      * leaves, or null if the line misses the pad. An end that's already on the pad is returned as is.
      */
     private fun clipToPad(from: Offset, to: Offset): Pair<Offset, Offset>? {
+        // Before the first layout, the pad has no size, so nothing is on it.
+        if (width == 0 || height == 0) return null
         val dx = to.x - from.x
         val dy = to.y - from.y
         // Liang–Barsky: the line is from + t·(dx, dy) for t in 0..1, and each edge limits t with

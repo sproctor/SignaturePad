@@ -145,6 +145,17 @@ class SignatureTest {
     }
 
     @Test
+    fun aTapBeforeTheFirstLayout_drawsNothing() {
+        val state = SignaturePadStateImpl()
+        state.gestureStarted(Offset.Zero)
+        state.gestureEnded()
+
+        state.setSize(100, 100)
+
+        assertTrue(state.signature.isEmpty)
+    }
+
+    @Test
     fun movesDuringAStroke_dontInvalidateReadersOfTheSignature() {
         stroke(strokeA)
         state.gestureStarted(strokeB.first())
