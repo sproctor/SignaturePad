@@ -1,6 +1,7 @@
 package com.seanproctor.signaturepad
 
 import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.runtime.snapshots.SnapshotStateObserver
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import kotlin.test.AfterTest
@@ -18,14 +19,13 @@ class FinishedStrokesCacheTest {
 
     private val state = SignaturePadStateImpl(ResizeBehavior.Fit).apply { setSize(100, 100) }
 
-    private val applyObserver = Snapshot.registerApplyObserver { changed, _ ->
-        if (changed.any { it in finishedReads }) finishedInvalidated = true
-    }
-    private val finishedReads = mutableSetOf<Any>()
+    // Observes reads the way the pad's drawWithCache does, which only invalidates for a derived state
+    // when its value changes, not whenever something it reads does.
+    private val observer = SnapshotStateObserver { it() }.apply { start() }
     private var finishedInvalidated = false
 
     @AfterTest
-    fun disposeObserver() = applyObserver.dispose()
+    fun stopObserver() = observer.stop()
 
     private fun finished() = RecordingCanvas().also {
         state.drawFinishedStrokes(it, Color.Black, 3f)
@@ -41,9 +41,9 @@ class FinishedStrokesCacheTest {
     private fun cacheFinishedStrokes() {
         // Deliver the changes made so far, so they aren't mistaken for ones made after caching.
         Snapshot.sendApplyNotifications()
-        finishedReads.clear()
-        Snapshot.observe(readObserver = { finishedReads.add(it) }) { finished() }
+        observer.clear()
         finishedInvalidated = false
+        observer.observeReads(this, onValueChangedForScope = { finishedInvalidated = true }) { finished() }
     }
 
     private fun invalidatedBy(change: () -> Unit): Boolean {
@@ -130,5 +130,22 @@ class FinishedStrokesCacheTest {
 
         cacheFinishedStrokes()
         assertTrue(invalidatedBy { state.clear() }, "clearing")
+    }
+
+    @Test
+    fun clearingAndResizingAnEmptyPad_invalidateNothing() {
+        Snapshot.sendApplyNotifications()
+        var invalidated = false
+        observer.observeReads(Any(), onValueChangedForScope = { invalidated = true }) {
+            all()
+            finished()
+            inProgress()
+        }
+
+        state.clear()
+        state.setSize(50, 50)
+        Snapshot.sendApplyNotifications()
+
+        assertFalse(invalidated)
     }
 }

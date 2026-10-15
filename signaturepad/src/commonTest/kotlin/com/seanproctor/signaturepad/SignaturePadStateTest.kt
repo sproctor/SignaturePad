@@ -254,6 +254,27 @@ class SignaturePadStateTest {
         assertFalse(state.signatureStarted.value)
     }
 
+    @Test
+    fun restoreDuringAStroke_dropsTheRestOfIt() {
+        val saved = SignaturePadStateImpl().apply {
+            setSize(100, 100)
+            gestureStarted(Offset(10f, 50f))
+            listOf(Offset(30f, 55f), Offset(50f, 45f), Offset(70f, 50f)).forEach { gestureMoved(it) }
+            gestureEnded()
+        }.toFloatList()
+        val state = SignaturePadStateImpl()
+        state.setSize(100, 100)
+        state.gestureStarted(Offset(10f, 10f))
+        state.gestureMoved(Offset(20f, 20f))
+
+        state.restoreFromFloatList(saved)
+        listOf(Offset(30f, 30f), Offset(40f, 40f), Offset(50f, 50f), Offset(60f, 60f))
+            .forEach { state.gestureMoved(it) }
+        state.gestureEnded()
+
+        assertEquals(saved, state.toFloatList(), "moves after the restore drew on the restored signature")
+    }
+
     // toFloatList() stores a 3-float header, then 9 floats per curve: start, end, prev, next, and
     // whether it starts a stroke.
     private fun SignaturePadStateImpl.curveCount() = (toFloatList().size - 3) / 9

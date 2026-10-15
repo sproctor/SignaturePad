@@ -51,3 +51,4 @@ val signaturePadState = rememberSaveableSignaturePadState(ResizeBehavior.Fit)
 - `SignaturePad(enabled = false)` stops the pad from taking input.
 - `signaturePadState.signatureStarted.value` becomes `true` once the user starts signing, which is handy for enabling a submit button.
 - `signaturePadState.clear()` erases the pad and sets `signatureStarted` back to `false`.
+- The state can be used from any thread, so you can clear, resize or export from a background thread while the pad is drawing. Input you feed it yourself goes into the same stroke as the user's, so don't send it while the user is drawing.
