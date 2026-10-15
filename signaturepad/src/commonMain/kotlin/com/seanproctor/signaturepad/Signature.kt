@@ -11,11 +11,14 @@ import kotlin.math.min
  * The finished strokes of a signature, at the size of the pad they were drawn on. A [Signature] never
  * changes: [SignaturePadState.signature] holds a new one each time the finished strokes do. So it can
  * be read in composition, watched with `snapshotFlow`, and exported on any thread.
+ *
+ * @property width the width of the pad the signature was drawn on, in pixels, or 0 when it's empty.
+ * @property height the height of the pad the signature was drawn on, in pixels, or 0 when it's empty.
  */
 public class Signature internal constructor(
     internal val curves: PersistentList<Bezier>,
-    private val width: Int,
-    private val height: Int,
+    public val width: Int,
+    public val height: Int,
 ) {
     /** `true` when the signature has no strokes. */
     public val isEmpty: Boolean get() = curves.isEmpty()

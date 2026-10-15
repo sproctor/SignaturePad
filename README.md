@@ -54,12 +54,19 @@ val signaturePadState = rememberSaveableSignaturePadState(ResizeBehavior.Fit)
 LaunchedEffect(signaturePadState) {
     snapshotFlow { signaturePadState.signature }
         .collectLatest { signature ->
-            saveSignature(signature.toImageBitmap(Color.Black, penWidth = 6f))
+            if (!signature.isEmpty) {
+                val bitmap = withContext(Dispatchers.Default) {
+                    signature.toImageBitmap(Color.Black, penWidth = 6f)
+                }
+                bitmap?.let { saveSignature(it) }
+            }
         }
 }
 ```
 
-A `Signature` never changes, so it can be exported on a background thread. `toImageBitmap` draws it at the pad's size, or returns `null` when it's empty, and `drawOnBitmap` scales it to fit a bitmap of your own.
+The check skips an empty signature. A new pad starts with one, so opening the screen doesn't overwrite a signature you saved before. Clearing the pad also gives an empty signature, so if clearing should delete the saved one too, do that where you call `clear()`.
+
+A `Signature` never changes, so it can be exported on a background thread, as here. `toImageBitmap` draws it at the pad's size (`width` by `height`), or returns `null` when it's empty, and `drawOnBitmap` scales it to fit a bitmap of your own.
 
 ### Other options
 

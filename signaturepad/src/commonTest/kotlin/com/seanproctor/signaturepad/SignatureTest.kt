@@ -1,5 +1,7 @@
 package com.seanproctor.signaturepad
 
+import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.runtime.snapshots.SnapshotStateObserver
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import kotlin.test.Test
@@ -128,5 +130,40 @@ class SignatureTest {
         state.clear()
         state.setSize(200, 200)
         assertNull(state.signature.toImageBitmap(Color.Black, 3f), "a cleared pad, resized since")
+    }
+
+    @Test
+    fun aSignature_hasThePadSize_unlessItsEmpty() {
+        stroke(strokeA)
+        assertEquals(100 to 100, state.signature.width to state.signature.height)
+
+        state.setSize(200, 150)
+        assertEquals(200 to 150, state.signature.width to state.signature.height)
+
+        state.clear()
+        assertEquals(0 to 0, state.signature.width to state.signature.height)
+    }
+
+    @Test
+    fun movesDuringAStroke_dontInvalidateReadersOfTheSignature() {
+        stroke(strokeA)
+        state.gestureStarted(strokeB.first())
+        Snapshot.sendApplyNotifications()
+        // Observes reads the way composition and drawWithCache do.
+        val observer = SnapshotStateObserver { it() }.apply { start() }
+        var invalidated = false
+        try {
+            observer.observeReads(this, onValueChangedForScope = { invalidated = true }) { state.signature }
+
+            strokeB.drop(1).forEach { state.gestureMoved(it) }
+            Snapshot.sendApplyNotifications()
+            assertFalse(invalidated, "a move during the stroke invalidated a reader")
+
+            state.gestureEnded()
+            Snapshot.sendApplyNotifications()
+            assertTrue(invalidated, "the stroke ending didn't invalidate a reader")
+        } finally {
+            observer.stop()
+        }
     }
 }

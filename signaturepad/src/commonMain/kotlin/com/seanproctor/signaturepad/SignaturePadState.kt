@@ -30,7 +30,8 @@ public interface SignaturePadState {
     /**
      * The finished strokes, without the stroke in progress. Holds a new [Signature] each time a stroke
      * ends and each time the signature is cleared, resized or restored, so reading it in composition
-     * or in `snapshotFlow` sees every change. An implementation that doesn't override it stays empty.
+     * or in `snapshotFlow` sees every change. An implementation that doesn't override it always returns
+     * an empty signature, so watching it never sees a change.
      */
     public val signature: Signature get() = Signature.Empty
 

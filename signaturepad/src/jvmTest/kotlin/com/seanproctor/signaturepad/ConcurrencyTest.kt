@@ -91,6 +91,7 @@ class ConcurrencyTest {
             { i -> if (i % 2 == 0) state.setSize(400, 200) else state.setSize(200, 100) },
             { _ -> state.drawAll() },
             { _ -> state.drawOnBitmap(bitmap, Color.Black, 2f) },
+            { _ -> state.signature.toImageBitmap(Color.Black, 2f) },
             { _ -> SignaturePadStateImpl(ResizeBehavior.Fit).restoreFromFloatList(state.toFloatList()) },
         )
 
@@ -143,6 +144,7 @@ class ConcurrencyTest {
         val finished = draw { drawFinishedStrokes(it, Color.Black, 3f) }
         val inProgress = draw { drawStrokeInProgress(it, Color.Black, 3f) }
         assertEquals(all, finished + inProgress)
+        assertEquals(finished.size, signature.curves.size, "the signature isn't the finished strokes")
         assertTrue(inProgress.isEmpty(), "every gesture ended, but a stroke is still in progress")
 
         val saved = toFloatList()
