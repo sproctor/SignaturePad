@@ -49,6 +49,6 @@ Most tests are in `signaturepad/src/jvmTest`. `RecordingCanvas` is a fake `Canva
 
 - Gradle 9.6.1 with Kotlin DSL, version catalog at `gradle/libs.versions.toml`
 - JVM toolchain: Java 17
-- Library version defined in `signaturepad/build.gradle.kts` (`version = "2.4.0"`)
+- Library version defined in `signaturepad/build.gradle.kts` (`version = "2.5.0"`)
 - Publishing: Maven Central via vanniktech-maven-publish plugin with GPG signing
 - Android: compileSdk 37, minSdk 23
