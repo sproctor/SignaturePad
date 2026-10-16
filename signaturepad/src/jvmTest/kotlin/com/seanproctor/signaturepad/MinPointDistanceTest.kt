@@ -101,8 +101,8 @@ class MinPointDistanceTest {
     }
 
     @Test
-    fun theDefaultOnDesktop_is2Dp() {
-        assertEquals(2.dp, SignaturePadDefaults.minPointDistance)
+    fun theDefaultOnDesktop_is4Dp() {
+        assertEquals(4.dp, SignaturePadDefaults.minPointDistance)
     }
 }
 
