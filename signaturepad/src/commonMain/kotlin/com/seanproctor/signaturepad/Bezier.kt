@@ -1,7 +1,13 @@
 package com.seanproctor.signaturepad
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import kotlin.math.sqrt
 
 /**
@@ -91,6 +97,20 @@ internal fun pathOf(vararg curves: List<Bezier>): Path {
     val path = Path()
     for (list in curves) list.forEach { it.addTo(path) }
     return path
+}
+
+internal fun drawCurves(canvas: Canvas, paint: Paint, vararg curves: List<Bezier>) {
+    if (curves.all { it.isEmpty() }) return
+    canvas.drawPath(pathOf(*curves), paint)
+}
+
+internal fun penPaint(color: Color, width: Float) = Paint().apply {
+    this.color = color
+    style = PaintingStyle.Stroke
+    strokeWidth = width
+    // Round ends and corners, so strokes look like they were drawn with a round pen.
+    strokeCap = StrokeCap.Round
+    strokeJoin = StrokeJoin.Round
 }
 
 private fun Float.whenNaN(then: () -> Float): Float =
