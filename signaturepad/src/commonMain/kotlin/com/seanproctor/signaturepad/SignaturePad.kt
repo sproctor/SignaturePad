@@ -87,8 +87,15 @@ public fun SignaturePad(
                         lastPoint = point
                         heldPoint = null
                     }
+                    fun onPad(point: Offset) =
+                        point.x in 0f..size.width.toFloat() && point.y in 0f..size.height.toFloat()
                     fun moveTo(point: Offset) {
-                        if ((point - lastPoint).getDistanceSquared() < minPointDistancePx * minPointDistancePx) {
+                        // A move across the pad's edge always goes through, however short, so the
+                        // state ends the stroke where the pointer left and starts a new one where it
+                        // came back, rather than joining them.
+                        if (onPad(point) == onPad(lastPoint) &&
+                            (point - lastPoint).getDistanceSquared() < minPointDistancePx * minPointDistancePx
+                        ) {
                             heldPoint = point
                             return
                         }

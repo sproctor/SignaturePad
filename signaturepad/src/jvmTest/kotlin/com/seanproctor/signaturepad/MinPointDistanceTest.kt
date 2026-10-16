@@ -76,6 +76,31 @@ class MinPointDistanceTest {
     }
 
     @Test
+    fun shortMovesAcrossTheEdge_endTheStrokeThere() {
+        val state = SignaturePadStateImpl()
+        val scene = ImageComposeScene(400, 400, Density(1f)) {
+            SignaturePad(state, Color.Black, 3.dp, Modifier.fillMaxSize(), minPointDistance = 2.dp)
+        }
+        try {
+            scene.render()
+            scene.send(PointerEventType.Press, Offset(300f, 100f), 0)
+            // Far enough to start the drag, then out past the right edge and back in, each move
+            // closer than 2.dp to the last, then well inside again.
+            scene.send(PointerEventType.Move, Offset(399f, 100f), 8)
+            scene.send(PointerEventType.Move, Offset(400.5f, 100f), 16)
+            scene.send(PointerEventType.Move, Offset(399.5f, 100.5f), 24)
+            scene.send(PointerEventType.Move, Offset(380f, 110f), 32)
+            scene.send(PointerEventType.Release, Offset(380f, 110f), 40)
+            scene.render()
+        } finally {
+            scene.close()
+        }
+
+        val ink = RecordingCanvas().also { state.drawSignature(it, Color.Black, 3f) }
+        assertEquals(2, ink.contourCount, "leaving the pad and coming back should start a new stroke")
+    }
+
+    @Test
     fun theDefaultOnDesktop_is2Dp() {
         assertEquals(2.dp, SignaturePadDefaults.minPointDistance)
     }
