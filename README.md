@@ -71,7 +71,7 @@ A `Signature` never changes, so it can be exported on a background thread, as he
 ### Other options
 
 - `SignaturePad(enabled = false)` stops the pad from taking input.
-- `SignaturePad(minPointDistance = 4.dp)` skips moves closer than that to the last point drawn. The default, `SignaturePadDefaults.minPointDistance`, is 2.dp on desktop, where the mouse only reports whole pixels and slow strokes would come out wobbly, and 0.dp on the other platforms.
+- `SignaturePad(minPointDistance = 6.dp)` skips moves closer than that to the last point drawn. The default, `SignaturePadDefaults.minPointDistance`, is 4.dp on desktop, where the mouse only reports whole pixels and slow strokes would come out wobbly, and 0.dp on the other platforms.
 - `signaturePadState.signatureStarted.value` becomes `true` once the user starts signing, which is handy for enabling a submit button.
 - `signaturePadState.clear()` erases the pad and sets `signatureStarted` back to `false`.
 - The state can be used from any thread, so you can clear, resize or export from a background thread while the pad is drawing. Input you feed it yourself goes into the same stroke as the user's, so don't send it while the user is drawing.
